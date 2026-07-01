@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         GitHub Themes
 // @namespace    github-themes
-// @version      1.0.0.1
+// @version      1.0.0.2
 // @description  GitHub 专业主题切换器 — 基于 CSS 变量覆盖，全面适配 GitHub 所有组件
 // @tag          Github
 // @tag          Themes
@@ -1578,6 +1578,14 @@
                     ? (idx + 1) % keys.length
                     : (idx - 1 + keys.length) % keys.length;
                 themePanel.switchTheme(keys[newIdx]);
+            }
+        });
+
+        // bfcache 恢复时重新注入主题（浏览器后退/前进）
+        window.addEventListener('pageshow', (e) => {
+            if (e.persisted) {
+                const saved = GM_getValue('github_theme', 'default');
+                applyTheme(saved);
             }
         });
     }
