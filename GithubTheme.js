@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         GitHub Themes
 // @namespace    github-themes
-// @version      1.0.0.2
+// @version      1.0.0.3
 // @description  GitHub 专业主题切换器 — 基于 CSS 变量覆盖，全面适配 GitHub 所有组件
 // @tag          Github
 // @tag          Themes
@@ -414,9 +414,6 @@
         return `rgba(${r},${g},${b},${alpha})`;
     }
 
-    // 记录当前已应用的 CSS 变量名列表（用于切换时清理）
-    let _appliedVarNames = [];
-
     function generateCSSVariables(t) {
         // 衍生色值
         const accentHover    = lightenOrDarken(t.bgDefault, t.accent, 0.12);
@@ -440,8 +437,9 @@
         const overlayBg      = t.bgSubtle;
         const isDark         = t.type === 'dark';
 
-        // 返回纯变量声明（无 :root 包装），以 ; 分隔，用于直接设置到 document.documentElement.style
-        return /* css */ `
+        // 返回 :root 块，每个声明带 !important（确保覆盖 GitHub 样式并存活 bfcache）
+        const css = /* css */ `
+:root {
   /* ═══ 核心背景 ═══ */
   --bgColor-default:        ${t.bgDefault};
   --bgColor-muted:          ${t.bgSubtle};
@@ -941,7 +939,10 @@
 
   /* ═══ 文本色 (color-text-*) ═══ */
   --color-text-white: ${t.bgDefault};
+}
 `;
+        // 给所有 CSS 变量声明追加 !important（确保覆盖 GitHub 样式 & bfcache 恢复）
+        return css.replace(/^(  --[\w-]+:[^;]*);$/gm, '$1 !important;');
     }
 
     /* ── 颜色工具函数 ──────────────────────────────────────────────── */
@@ -978,29 +979,19 @@
      * ======================================================================== */
 
     function applyTheme(themeKey) {
-        const html = document.documentElement;
-
-        // 清理上一次主题设置的所有 CSS 变量
-        for (const name of _appliedVarNames) {
-            html.style.removeProperty(name);
-        }
-        _appliedVarNames = [];
+        // 移除旧主题样式元素
+        const oldStyle = document.getElementById('github-theme-style');
+        if (oldStyle) oldStyle.remove();
 
         const themeData = themes[themeKey];
         if (!themeData || themeKey === 'default' || !themeData.tokens) return;
 
-        // 生成纯变量声明字符串并一次性设置（cssText += 是单次样式重算，性能最优）
-        const declarations = generateCSSVariables(themeData.tokens);
-
-        // 解析出所有变量名以便后续清理
-        const varNameRe = /(--[\w-]+)\s*:/g;
-        let m;
-        while ((m = varNameRe.exec(declarations)) !== null) {
-            _appliedVarNames.push(m[1]);
-        }
-
-        // 将变量直接写入 <html> 的 inline style — 这比任何样式表优先级都高
-        html.style.cssText += declarations;
+        // 生成 CSS 并注入为 <style> 元素（DOM 元素可存活 bfcache，比 inline style 更可靠）
+        const css = generateCSSVariables(themeData.tokens);
+        const styleEl = document.createElement('style');
+        styleEl.id = 'github-theme-style';
+        styleEl.textContent = css;
+        document.head.appendChild(styleEl);
     }
 
     /* ========================================================================
