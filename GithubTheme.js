@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         GitHub Themes
 // @namespace    github-themes
-// @version      1.1.0.0
+// @version      1.2.0.0
 // @description  GitHub 专业主题切换器 — 基于 CSS 变量覆盖，全面适配 GitHub 所有组件
 // @tag          Github
 // @tag          Themes
@@ -427,6 +427,25 @@
                 done:         '#ad94d9',  headerBg:     '#1b2a45',
                 headerFg:     '#e9e2d6',  codeBg:       '#1d1a17',
                 border:       '#47413a',  link:         '#6db3a3',
+            }
+        },
+
+        // ── 23. VSCode 2026 Dark ── 冷灰蓝，编辑器质感 ──────────────────
+        // 提炼自 VSCode「2026 Dark」(dark_modern)：editor #121314 为最凹层、
+        // UI 面板 #191A1B、青蓝 #297AA0 做主按钮与强调、链接亮蓝 #48A0C7
+        'vscode-2026-dark': {
+            name: '💻 2026 Dark',
+            type: 'dark',
+            tokens: {
+                bgDefault:    '#191A1B',  bgSubtle:     '#202122',
+                bgInset:      '#121314',  bgEmphasis:   '#333536',
+                fgDefault:    '#bfbfbf',  fgMuted:      '#8C8C8C',
+                fgSubtle:     '#7a7b7d',  fgOnEmphasis: '#ffffff',
+                accent:       '#297AA0',  success:      '#73c991',
+                danger:       '#f48771',  warning:      '#e5ba7d',
+                done:         '#d2a8ff',  headerBg:     '#121314',
+                headerFg:     '#bfbfbf',  codeBg:       '#121314',
+                border:       '#333536',  link:         '#48A0C7',
             }
         },
 
