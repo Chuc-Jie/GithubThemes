@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         GitHub Themes
 // @namespace    github-themes
-// @version      1.0.0.3
+// @version      1.0.0.4
 // @description  GitHub 专业主题切换器 — 基于 CSS 变量覆盖，全面适配 GitHub 所有组件
 // @tag          Github
 // @tag          Themes
@@ -1096,6 +1096,7 @@
                 }
 
                 .theme-panel-header {
+                    flex-shrink: 0;
                     padding: 20px 20px 16px;
                     border-bottom: 1px solid #e1e4e8;
                     background: #ffffff;
@@ -1163,6 +1164,7 @@
 
                 .theme-panel-content {
                     flex: 1;
+                    min-height: 0;
                     overflow-y: auto;
                     padding: 16px 20px;
                     background: #ffffff;
@@ -1267,6 +1269,7 @@
                 .theme-empty-state small { font-size: 13px; color: #656d76; }
 
                 .theme-panel-footer {
+                    flex-shrink: 0;
                     padding: 12px 20px;
                     border-top: 1px solid #e1e4e8;
                     background: #ffffff;
@@ -1468,10 +1471,14 @@
                 });
                 searchInput.addEventListener('keydown', (e) => {
                     if (e.key === 'Escape') {
-                        searchInput.value = '';
-                        this.searchQuery = '';
-                        this.renderThemeButtons('');
-                        e.stopPropagation();
+                        if (this.searchQuery) {
+                            // 有搜索词：ESC 先清空并恢复完整列表
+                            searchInput.value = '';
+                            this.searchQuery = '';
+                            this.renderThemeButtons('');
+                            e.stopPropagation(); // 阻止冒泡到 document 的关闭监听
+                        }
+                        // 无搜索词：不拦截，事件冒泡 → document 监听器关闭面板
                     }
                 });
             }
