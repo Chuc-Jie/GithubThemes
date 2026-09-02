@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         GitHub Themes
 // @namespace    github-themes
-// @version      1.0.0.4
+// @version      1.1.0.0
 // @description  GitHub 专业主题切换器 — 基于 CSS 变量覆盖，全面适配 GitHub 所有组件
 // @tag          Github
 // @tag          Themes
@@ -391,6 +391,42 @@
                 done:         '#D2A6FF',  headerBg:     '#141822',
                 headerFg:     '#D9D7CE',  codeBg:       '#141822',
                 border:       '#33415E',  link:         '#FFCC66',
+            }
+        },
+
+        // ── 21. Warm Paper ── 暖白纸感，墨字青绿冷锚 ───────────────────
+        // 设计：底不刺眼(暖白掺黄)、字是墨(暖调深灰)、青绿做冷锚、
+        //       标题色相谱(藏蓝→紫→青绿→玫红→琥珀)承载层级
+        'warm-paper': {
+            name: '🪶 Warm Paper',
+            type: 'light',
+            tokens: {
+                bgDefault:    '#faf7f1',  bgSubtle:     '#f1ebe1',
+                bgInset:      '#e9e1d4',  bgEmphasis:   '#1d345c',
+                fgDefault:    '#3d3730',  fgMuted:      '#5f564b',
+                fgSubtle:     '#857a6b',  fgOnEmphasis: '#faf7f1',
+                accent:       '#0e6e63',  success:      '#3e6b34',
+                danger:       '#b0404f',  warning:      '#8f5e16',
+                done:         '#52377a',  headerBg:     '#1d345c',
+                headerFg:     '#faf7f1',  codeBg:       '#e9e1d4',
+                border:       '#d8cdbb',  link:         '#0e6e63',
+            }
+        },
+
+        // ── 22. Warm Paper Dark ── 同色相提亮，换光线不换皮肤 ───────────
+        'warm-paper-dark': {
+            name: '🕯️ Warm Paper Dark',
+            type: 'dark',
+            tokens: {
+                bgDefault:    '#262322',  bgSubtle:     '#312d29',
+                bgInset:      '#1a1815',  bgEmphasis:   '#e9e2d6',
+                fgDefault:    '#e9e2d6',  fgMuted:      '#b0a58f',
+                fgSubtle:     '#8a8070',  fgOnEmphasis: '#262322',
+                accent:       '#6db3a3',  success:      '#a3c98f',
+                danger:       '#e58a98',  warning:      '#e3b26a',
+                done:         '#ad94d9',  headerBg:     '#1b2a45',
+                headerFg:     '#e9e2d6',  codeBg:       '#1d1a17',
+                border:       '#47413a',  link:         '#6db3a3',
             }
         },
 
