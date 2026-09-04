@@ -1103,6 +1103,112 @@
     }
 
     /* ========================================================================
+     *  Release 分组排序 — 按系统（Windows/macOS/Linux/Android/iOS）重排下载项
+     *  同系统文件聚拢，且同系统 .octicon-package 图标统一着色、跨系统颜色不同
+     *  默认关闭，由面板开关控制
+     * ======================================================================== */
+
+    const PLATFORM_ORDER = ['windows', 'mac', 'linux', 'android', 'ios'];
+    const PLATFORM_COLORS = {
+        windows: '#0078d4',   // Windows 蓝
+        mac:     '#8e8e93',   // 银灰
+        linux:   '#f5803e',   // 橙（Tux 风）
+        android: '#3ddc84',   // Android 绿
+        ios:     '#5e5ce6'    // iOS 靛紫
+    };
+
+    // 从文件名（优先下载链接 href 的 basename）判定所属系统
+    function ghbAssetName(row) {
+        const a = row.querySelector('a');
+        if (a) {
+            const href = a.getAttribute('href') || '';
+            const last = href.split('/').pop();
+            if (last) return decodeURIComponent(last);
+        }
+        return (row.textContent || '').trim();
+    }
+
+    function detectPlatform(name) {
+        const n = name.toLowerCase();
+        const tok = (s) => new RegExp('(^|[-_])' + s + '(\\d|[-_]|$)', 'i').test(n);
+        if (/\.apk$|\.aab$|android/.test(n)) return 'android';
+        if (/\.ipa$|ios/.test(n)) return 'ios';
+        if (/\.exe$|\.msi$|windows|win32|win64|mingw/.test(n) || tok('win')) return 'windows';
+        if (/\.dmg$|\.pkg$|macos|macosx|osx|darwin/.test(n) || tok('mac')) return 'mac';
+        if (/\.appimage$|\.deb$|\.rpm$|\.snap$|linux|ubuntu/.test(n)) return 'linux';
+        return 'other';
+    }
+
+    function platformRank(row) {
+        const i = PLATFORM_ORDER.indexOf(detectPlatform(ghbAssetName(row)));
+        return i === -1 ? 999 : i;
+    }
+
+    function colorReleaseIcon(row, enabled) {
+        const svg = row.querySelector('.octicon-package');
+        if (!svg) return;
+        if (!enabled) { svg.style.removeProperty('color'); return; }
+        const color = PLATFORM_COLORS[detectPlatform(ghbAssetName(row))];
+        if (color) svg.style.setProperty('color', color, 'important');
+        else svg.style.removeProperty('color');
+    }
+
+    let ghbGroupCounter = 0;
+
+    function applyReleaseGrouping() {
+        const enabled = GM_getValue('github_release_group_enabled', false);
+        const assets = Array.from(document.querySelectorAll('.Box-row'))
+            .filter(r => r.querySelector('.octicon-package'));
+        if (!assets.length) return;
+
+        // 按父容器分组（避免误排页面其它 .Box-row）
+        const byParent = new Map();
+        assets.forEach(r => {
+            const p = r.parentElement;
+            if (!byParent.has(p)) byParent.set(p, []);
+            byParent.get(p).push(r);
+        });
+
+        byParent.forEach((rows) => {
+            const parent = rows[0].parentElement;
+            // 首次见到时记录原始相对序，供关闭后还原
+            rows.forEach((r) => { if (r.dataset.ghbOrig == null) r.dataset.ghbOrig = String(++ghbGroupCounter); });
+
+            const target = rows.slice().sort((a, b) => {
+                if (enabled) {
+                    const ra = platformRank(a), rb = platformRank(b);
+                    if (ra !== rb) return ra - rb;
+                }
+                return (+a.dataset.ghbOrig) - (+b.dataset.ghbOrig);
+            });
+
+            // 仅在顺序变化时重排，避免 MutationObserver 死循环
+            const children = Array.from(parent.children);
+            const assetSet = new Set(rows);
+            const result = [];
+            let si = 0;
+            children.forEach(c => result.push(assetSet.has(c) ? target[si++] : c));
+            const changed = children.some((c, i) => c !== result[i]);
+            if (changed) result.forEach(el => parent.appendChild(el));
+
+            rows.forEach(r => colorReleaseIcon(r, enabled));
+        });
+    }
+
+    // 监听动态加载（GitHub 资源常异步渲染），仅在开启时生效
+    let ghbReleaseObserver = null;
+    function setupReleaseGroupingObserver() {
+        if (ghbReleaseObserver) return;
+        let timer = null;
+        ghbReleaseObserver = new MutationObserver(() => {
+            if (!GM_getValue('github_release_group_enabled', false)) return;
+            clearTimeout(timer);
+            timer = setTimeout(applyReleaseGrouping, 300);
+        });
+        ghbReleaseObserver.observe(document.documentElement, { childList: true, subtree: true });
+    }
+
+    /* ========================================================================
      *  UI 面板
      * ======================================================================== */
 
@@ -1153,6 +1259,15 @@
                                 <input type="range" id="boxrow-width" min="2" max="16" step="1" value="${GM_getValue('github_boxrow_bar_width', 4)}" />
                                 <span class="boxrow-width-val" id="boxrow-width-val">${GM_getValue('github_boxrow_bar_width', 4)}px</span>
                             </div>
+                        </div>
+                    </div>
+                    <div class="theme-section boxrow-section">
+                        <h4>🗂️ Release 分组排序 <span class="theme-type-count">按系统</span></h4>
+                        <div class="boxrow-controls">
+                            <label class="boxrow-toggle">
+                                <input type="checkbox" id="release-group-enabled" ${GM_getValue('github_release_group_enabled', false) ? 'checked' : ''} />
+                                <span>按系统分组排序（Windows → macOS → Linux → Android → iOS）</span>
+                            </label>
                         </div>
                     </div>
                     <div class="theme-empty-state" id="empty-state" style="display: none;">
@@ -1691,6 +1806,15 @@
                     applyBoxRowEnhancement();   // 拖动时实时重绘竖条
                 });
             }
+
+            const relEl = document.getElementById('release-group-enabled');
+            if (relEl) {
+                relEl.addEventListener('change', () => {
+                    GM_setValue('github_release_group_enabled', relEl.checked);
+                    applyReleaseGrouping();
+                    this.showToast(relEl.checked ? 'Release 分组排序已开启' : 'Release 分组排序已关闭');
+                });
+            }
         }
 
         show() {
@@ -1737,6 +1861,8 @@
     function init() {
         injectAnimations();
         applyBoxRowEnhancement();   // 默认常驻：列表行悬停增强（竖条跟随主题，受开关/粗细控制）
+        applyReleaseGrouping();    // Release 分组排序（受开关控制，默认关闭）
+        setupReleaseGroupingObserver();
         themePanel = new ThemePanel();
 
         const savedTheme = GM_getValue('github_theme', 'default');
@@ -1778,6 +1904,7 @@
             if (e.persisted) {
                 const saved = GM_getValue('github_theme', 'default');
                 applyTheme(saved);
+                applyReleaseGrouping();
             }
         });
     }
