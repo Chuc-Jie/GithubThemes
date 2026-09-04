@@ -1077,9 +1077,6 @@
 .Box-row {
   border-radius: 0 !important;
 }
-.Box-row:not(:last-child) {
-  border-bottom: 1px solid var(--ghb-accent-bar, #d0d7de) !important;
-}
 .Box-row:hover {
   background-color: var(--ghb-boxrow-hover-bg, #f0f6ff) !important;
   box-shadow: inset ${width}px 0 0 var(--ghb-accent-bar, #0969da) !important;
