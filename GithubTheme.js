@@ -492,6 +492,9 @@
         const overlayBg      = t.bgSubtle;
         const isDark         = t.type === 'dark';
 
+        // Box-row 悬停增强（Release / 列表行）— 左侧竖条跟随主题 accent
+        const boxRowHoverBg  = isDark ? hexToRgba(t.accent, 0.18) : hexToRgba(t.accent, 0.10);
+
         // 返回 :root 块，每个声明带 !important（确保覆盖 GitHub 样式并存活 bfcache）
         const css = /* css */ `
 :root {
@@ -994,6 +997,10 @@
 
   /* ═══ 文本色 (color-text-*) ═══ */
   --color-text-white: ${t.bgDefault};
+
+  /* ═══ Box-row 悬停增强 — 左侧竖条 / 悬停底色（供 github-boxrow-style 引用） ═══ */
+  --ghb-accent-bar:      ${t.accent};
+  --ghb-boxrow-hover-bg: ${boxRowHoverBg};
 }
 `;
         // 给所有 CSS 变量声明追加 !important（确保覆盖 GitHub 样式 & bfcache 恢复）
@@ -1050,6 +1057,55 @@
     }
 
     /* ========================================================================
+     *  Box-row 悬停增强 — 左侧竖条 + 悬停底色，颜色随主题 accent 变化
+     *  独立于主题样式，默认常驻注入；默认主题下用 GitHub 原生蓝兜底
+     * ======================================================================== */
+
+    function applyBoxRowEnhancement() {
+        const enabled = GM_getValue('github_boxrow_enabled', true);
+        const width   = Math.min(16, Math.max(2, GM_getValue('github_boxrow_bar_width', 4)));
+        let el = document.getElementById('github-boxrow-style');
+
+        // 关闭增强 → 移除样式（彻底还原，不强制直角 / 分隔线）
+        if (!enabled) {
+            if (el) el.remove();
+            return;
+        }
+
+        const css = /* css */ `
+/* 列表项强制直角，悬停时显示主题色左侧竖条 */
+.Box-row {
+  border-radius: 0 !important;
+}
+.Box-row:not(:last-child) {
+  border-bottom: 1px solid var(--ghb-accent-bar, #d0d7de) !important;
+}
+.Box-row:hover {
+  background-color: var(--ghb-boxrow-hover-bg, #f0f6ff) !important;
+  box-shadow: inset ${width}px 0 0 var(--ghb-accent-bar, #0969da) !important;
+  border-radius: 0 !important;
+  transition: background-color 0.15s ease, box-shadow 0.15s ease;
+}
+/* 悬停时链接色跟随主题强调色 */
+.Box-row:hover a {
+  color: var(--fgColor-link, #0550ae) !important;
+}
+/* 自定义下载按钮（如 Releases 页）反馈 */
+.Box-row:hover .ghb-dl-btn {
+  background: var(--ghb-boxrow-hover-bg, #eaf3ff) !important;
+  border-color: var(--ghb-accent-bar, #58a6ff) !important;
+  color: var(--fgColor-link, #0550ae) !important;
+}
+`;
+        if (!el) {
+            el = document.createElement('style');
+            el.id = 'github-boxrow-style';
+            document.head.appendChild(el);
+        }
+        el.textContent = css;
+    }
+
+    /* ========================================================================
      *  UI 面板
      * ======================================================================== */
 
@@ -1087,6 +1143,20 @@
                     <div class="theme-section">
                         <h4>🌙 深色主题 <span class="theme-type-count" id="dark-count"></span></h4>
                         <div class="theme-grid" id="dark-themes"></div>
+                    </div>
+                    <div class="theme-section boxrow-section">
+                        <h4>📐 列表行增强 <span class="theme-type-count">悬停竖条</span></h4>
+                        <div class="boxrow-controls">
+                            <label class="boxrow-toggle">
+                                <input type="checkbox" id="boxrow-enabled" ${GM_getValue('github_boxrow_enabled', true) ? 'checked' : ''} />
+                                <span>启用列表行悬停增强</span>
+                            </label>
+                            <div class="boxrow-width">
+                                <label for="boxrow-width">竖条粗细</label>
+                                <input type="range" id="boxrow-width" min="2" max="16" step="1" value="${GM_getValue('github_boxrow_bar_width', 4)}" />
+                                <span class="boxrow-width-val" id="boxrow-width-val">${GM_getValue('github_boxrow_bar_width', 4)}px</span>
+                            </div>
+                        </div>
                     </div>
                     <div class="theme-empty-state" id="empty-state" style="display: none;">
                         <div class="empty-state-icon">🔍</div>
@@ -1362,6 +1432,52 @@
                     white-space: nowrap;
                 }
 
+                /* ── 列表行增强设置 ── */
+                .boxrow-section { margin-top: 4px; }
+                .boxrow-controls {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 12px;
+                    padding: 12px;
+                    background: #f6f8fa;
+                    border: 1px solid #e1e4e8;
+                    border-radius: 8px;
+                }
+                .boxrow-toggle {
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    font-size: 13px;
+                    color: #24292f;
+                    cursor: pointer;
+                }
+                .boxrow-toggle input {
+                    width: 16px;
+                    height: 16px;
+                    cursor: pointer;
+                    accent-color: #0969da;
+                }
+                .boxrow-width {
+                    display: flex;
+                    align-items: center;
+                    gap: 10px;
+                    font-size: 13px;
+                    color: #24292f;
+                }
+                .boxrow-width label { white-space: nowrap; }
+                .boxrow-width input[type="range"] {
+                    flex: 1;
+                    accent-color: #0969da;
+                    cursor: pointer;
+                }
+                .boxrow-width-val {
+                    min-width: 36px;
+                    text-align: right;
+                    font-variant-numeric: tabular-nums;
+                    color: #656d76;
+                    font-size: 12px;
+                }
+
                 @media (max-width: 480px) {
                     #github-theme-panel {
                         right: 8px;
@@ -1553,6 +1669,31 @@
             document.addEventListener('keydown', (e) => {
                 if (e.key === 'Escape' && this.isVisible) this.hide();
             });
+
+            this.setupBoxRowControls();
+        }
+
+        setupBoxRowControls() {
+            const enabledEl = document.getElementById('boxrow-enabled');
+            const widthEl   = document.getElementById('boxrow-width');
+            const widthVal  = document.getElementById('boxrow-width-val');
+
+            if (enabledEl) {
+                enabledEl.addEventListener('change', () => {
+                    GM_setValue('github_boxrow_enabled', enabledEl.checked);
+                    applyBoxRowEnhancement();
+                    this.showToast(enabledEl.checked ? '列表行增强已开启' : '列表行增强已关闭');
+                });
+            }
+
+            if (widthEl && widthVal) {
+                widthEl.addEventListener('input', () => {
+                    const w = parseInt(widthEl.value, 10) || 0;
+                    widthVal.textContent = w + 'px';
+                    GM_setValue('github_boxrow_bar_width', w);
+                    applyBoxRowEnhancement();   // 拖动时实时重绘竖条
+                });
+            }
         }
 
         show() {
@@ -1598,6 +1739,7 @@
 
     function init() {
         injectAnimations();
+        applyBoxRowEnhancement();   // 默认常驻：列表行悬停增强（竖条跟随主题，受开关/粗细控制）
         themePanel = new ThemePanel();
 
         const savedTheme = GM_getValue('github_theme', 'default');
