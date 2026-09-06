@@ -1,0 +1,2471 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-page-node-id="Cp6NnClWYCbLOmtfeCfPDC">
+<head data-page-node-id="KXeMQBlPT4xitxWv0EFzik">
+<meta charset="UTF-8" data-page-node-id="tIRblg0lOSsQd3WgnbKg7L">
+<meta name="viewport" content="width=device-width, initial-scale=1.0" data-page-node-id="uTXXea3H09k7X9Ry4vsbaB">
+<title>GitHub Themes Studio — 主题创作工具</title>
+<meta name="description" content="为 GitHub Themes 用户脚本可视化创作主题：编辑 18 个语义 Token、实时预览、一键生成配置块。" data-page-node-id="6dNlBIchb54NQfIZGWCJV8">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2016%2016'%3E%3Cpath%20fill='%232f81f7'%20d='M8%200c4.42%200%208%203.58%208%208a8.013%208.013%200%200%201-5.45%207.59c-.4.08-.55-.17-.55-.38%200-.27.01-1.13.01-2.2%200-.75-.25-1.23-.54-1.48%201.78-.2%203.65-.88%203.65-3.95%200-.88-.31-1.59-.82-2.15.08-.2.36-1.02-.08-2.12%200%200-.67-.22-2.2.82-.64-.18-1.32-.27-2-.27-.68%200-1.36.09-2%20.27-1.53-1.03-2.2-.82-2.2-.82-.44%201.1-.16%201.92-.08%202.12-.51.56-.82%201.28-.82%202.15%200%203.06%201.86%203.75%203.64%203.95-.23.2-.44.55-.51%201.07-.46.21-1.61.55-2.33-.66-.15-.24-.6-.83-1.23-.82-.67.01-.27.38.01.53.34.19.73.9.82%201.13.16.45.68%201.31%202.69.94%200%20.67.01%201.3.01%201.49%200%20.21-.15.45-.55.38A7.995%207.995%200%200%201%200%208c0-4.42%203.58-8%208-8Z'/%3E%3C/svg%3E" data-page-node-id="RfM5GWFGfKxDVDPnDblIi1">
+<style>
+    /* ═══════════════ 基础与布局 ═══════════════ */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+        --st-bg: #0d1117;
+        --st-bg-2: #161b22;
+        --st-bg-3: #21262d;
+        --st-bg-inset: #010409;
+        --st-border: #30363d;
+        --st-border-2: #21262d;
+        --st-fg: #e6edf3;
+        --st-fg-2: #8b949e;
+        --st-fg-3: #6e7681;
+        --st-accent: #2f81f7;
+        --st-accent-2: #58a6ff;
+        --st-danger: #f85149;
+        --st-success: #3fb950;
+        --st-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+    }
+    html, body { height: 100%; }
+    body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif;
+        background: var(--st-bg);
+        color: var(--st-fg);
+        font-size: 14px;
+        line-height: 1.5;
+        overflow: hidden;
+    }
+    button { font: inherit; }
+    input { font: inherit; }
+    ::selection { background: rgba(88, 166, 255, .3); }
+
+    /* ═══════════════ 顶部栏 ═══════════════ */
+    .topbar {
+        display: flex; align-items: center; gap: 16px;
+        height: 56px; padding: 0 20px;
+        background: var(--st-bg-2);
+        border-bottom: 1px solid var(--st-border);
+        flex-shrink: 0;
+        user-select: none;
+    }
+    .topbar .logo { display: flex; align-items: center; gap: 10px; font-weight: 600; font-size: 15px; }
+    .topbar .logo svg { color: var(--st-accent-2); }
+    .topbar .logo .sub { color: var(--st-fg-2); font-weight: 400; font-size: 12px; }
+    .topbar .spacer { flex: 1; }
+    .topbar .hint { font-size: 12px; color: var(--st-fg-3); }
+
+    .btn {
+        display: inline-flex; align-items: center; gap: 6px;
+        padding: 5px 14px; border-radius: 6px; cursor: pointer;
+        border: 1px solid var(--st-border);
+        background: var(--st-bg-3); color: var(--st-fg);
+        font-size: 13px; font-weight: 500;
+        transition: .15s;
+        white-space: nowrap;
+    }
+    .btn:hover { border-color: var(--st-fg-3); background: #262c34; }
+    .btn.primary {
+        background: #238636; border-color: #2ea043; color: #fff;
+    }
+    .btn.primary:hover { background: #2ea043; }
+    .btn.accent {
+        background: var(--st-accent); border-color: var(--st-accent); color: #fff;
+    }
+    .btn.accent:hover { background: #1f6feb; }
+    .btn.ghost { background: transparent; }
+    .btn.ghost:hover { background: var(--st-bg-3); }
+    .btn:active { transform: translateY(1px); }
+
+    /* ═══════════════ 主体三栏 ═══════════════ */
+    .layout {
+        display: flex; height: calc(100vh - 56px);
+        overflow: hidden;
+    }
+
+    /* ---- 左：编辑 ---- */
+    .editor {
+        width: 360px; min-width: 320px;
+        display: flex; flex-direction: column;
+        background: var(--st-bg-2);
+        border-right: 1px solid var(--st-border);
+        overflow: hidden;
+    }
+    .editor-scroll { flex: 1; overflow-y: auto; padding: 12px 14px 20px; }
+    .editor-scroll::-webkit-scrollbar { width: 8px; }
+    .editor-scroll::-webkit-scrollbar-thumb { background: #30363d; border-radius: 4px; }
+
+    .meta { display: flex; gap: 8px; margin-bottom: 14px; }
+    .meta .field { flex: 1; }
+    .meta label { display: block; font-size: 11px; color: var(--st-fg-3); margin-bottom: 3px; }
+    .meta input {
+        width: 100%; padding: 5px 8px;
+        background: var(--st-bg-inset); border: 1px solid var(--st-border);
+        border-radius: 6px; color: var(--st-fg); font-size: 13px;
+    }
+    .meta input:focus { outline: none; border-color: var(--st-accent); box-shadow: 0 0 0 3px rgba(47,129,247,.25); }
+    .meta .field.t {
+        flex: 0 0 96px;
+    }
+    .seg {
+        display: flex; background: var(--st-bg-inset); border: 1px solid var(--st-border);
+        border-radius: 6px; overflow: hidden;
+    }
+    .seg button {
+        flex: 1; padding: 5px 8px; background: transparent; color: var(--st-fg-2);
+        border: none; cursor: pointer; font-size: 12px;
+    }
+    .seg button.active { background: var(--st-bg-3); color: var(--st-fg); }
+
+    /* 基底主题下拉 */
+    .base-select {
+        flex: 1; min-width: 0; padding: 5px 8px;
+        background: var(--st-bg-inset); border: 1px solid var(--st-border);
+        border-radius: 6px; color: var(--st-fg); font-size: 13px;
+        cursor: pointer;
+    }
+    .base-select:focus { outline: none; border-color: var(--st-accent); }
+    .base-select option, .base-select optgroup { background: var(--st-bg-2); color: var(--st-fg); }
+
+    .grp { margin-bottom: 16px; }
+    .grp-title {
+        font-size: 11px; font-weight: 600; text-transform: uppercase;
+        letter-spacing: .06em; color: var(--st-fg-3);
+        margin-bottom: 2px;
+        display: flex; align-items: center; gap: 6px;
+    }
+    .grp-title .chip {
+        font-size: 10px; font-weight: 400; background: var(--st-bg-3);
+        color: var(--st-fg-2); border-radius: 8px; padding: 0 6px;
+        text-transform: none; letter-spacing: 0;
+    }
+    .token-row {
+        display: flex; align-items: center; gap: 8px;
+        padding: 6px 8px; border-radius: 8px; margin-top: 2px;
+    }
+    .token-row:hover { background: var(--st-bg-3); }
+    .token-row .swatch {
+        width: 30px; height: 22px; border-radius: 5px; cursor: pointer;
+        border: 1px solid var(--st-border-2); flex-shrink: 0;
+        position: relative; overflow: hidden;
+    }
+    .token-row .swatch input[type=color] {
+        position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
+    }
+    .token-row .lbl { flex: 1; }
+    .token-row .lbl .k { font-size: 13px; font-family: var(--st-mono); color: var(--st-fg); }
+    .token-row .lbl .d { font-size: 10px; color: var(--st-fg-3); }
+    .token-row .hex {
+        width: 76px; padding: 3px 6px;
+        background: var(--st-bg-inset); border: 1px solid var(--st-border);
+        border-radius: 5px; color: var(--st-fg); font-family: var(--st-mono);
+        font-size: 12px; text-transform: uppercase; text-align: center;
+    }
+    .token-row .hex:focus { outline: none; border-color: var(--st-accent); }
+    .token-row .hex.err { border-color: var(--st-danger); color: var(--st-danger); }
+
+    /* 对比度徽标 */
+    .ca-badge {
+        display: inline-flex; align-items: center; gap: 4px;
+        font-size: 10px; padding: 1px 7px; border-radius: 9px;
+        border: 1px solid var(--st-border);
+    }
+    .ca-badge.ok { color: var(--st-success); border-color: rgba(63,185,80,.4); background: rgba(63,185,80,.08); }
+    .ca-badge.warn { color: #d29922; border-color: rgba(210,153,34,.4); background: rgba(210,153,34,.08); }
+    .ca-badge.bad { color: var(--st-danger); border-color: rgba(248,81,73,.4); background: rgba(248,81,73,.08); }
+
+    /* ---- 中：预览 ---- */
+    .preview-pane {
+        flex: 1; display: flex; flex-direction: column; min-width: 420px;
+        background: var(--st-bg-inset); overflow: hidden;
+    }
+    .preview-tabs {
+        display: flex; align-items: center; gap: 2px;
+        padding: 0 14px; height: 40px; flex-shrink: 0;
+        border-bottom: 1px solid var(--st-border);
+        background: var(--st-bg-2);
+        overflow-x: auto;
+    }
+    .preview-tabs::-webkit-scrollbar { display: none; }
+    .ptab {
+        padding: 6px 14px; border-radius: 6px; cursor: pointer;
+        font-size: 12px; color: var(--st-fg-2); white-space: nowrap;
+        border: none; background: transparent;
+    }
+    .ptab:hover { color: var(--st-fg); }
+    .ptab.active { color: var(--st-fg); background: var(--st-bg-3); }
+    .preview-stage {
+        flex: 1; overflow: auto; padding: 22px 26px;
+        display: flex; justify-content: center;
+    }
+    .preview-stage::-webkit-scrollbar { width: 8px; height: 8px; }
+    .preview-stage::-webkit-scrollbar-thumb { background: #30363d; border-radius: 4px; }
+
+    /* 预览设备框 —— 真实场景在 Shadow DOM 中渲染（#ghs-root），此处只做外框 */
+    .device {
+        width: 860px; max-width: 100%; height: auto;
+        border-radius: 12px; overflow: hidden;
+        border: 1px solid var(--st-border-2);
+        box-shadow: 0 18px 50px rgba(1,4,9,.55);
+        align-self: flex-start;
+        background: var(--st-bg-2);
+    }
+    /* ---- 右：输出 ---- */
+    .output {
+        width: 420px; min-width: 360px;
+        display: flex; flex-direction: column;
+        background: var(--st-bg-2);
+        border-left: 1px solid var(--st-border);
+    }
+    .output-head {
+        display: flex; align-items: center; gap: 8px;
+        padding: 10px 14px; border-bottom: 1px solid var(--st-border);
+        flex-shrink: 0;
+    }
+    .output-head .t { font-weight: 600; font-size: 13px; flex: 1; }
+    .output-head .status { font-size: 11px; color: var(--st-fg-3); }
+    .output-body { flex: 1; overflow: auto; }
+    .output-body pre {
+        margin: 0; padding: 14px 16px;
+        font-family: var(--st-mono); font-size: 12px; line-height: 1.55;
+        color: #c9d1d9; white-space: pre; overflow: auto;
+    }
+    .output-body::-webkit-scrollbar, .output-body pre::-webkit-scrollbar { width: 8px; height: 8px; }
+    .output-body::-webkit-scrollbar-thumb, .output-body pre::-webkit-scrollbar-thumb { background: #30363d; border-radius: 4px; }
+    .output-foot {
+        display: flex; gap: 8px; padding: 10px 14px;
+        border-top: 1px solid var(--st-border); flex-shrink: 0;
+        flex-wrap: wrap;
+    }
+    .toast {
+        position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px);
+        background: #24292f; color: #fff; padding: 9px 20px; border-radius: 8px;
+        font-size: 13px; z-index: 99; opacity: 0;
+        transition: .25s; box-shadow: 0 8px 24px rgba(0,0,0,.35);
+        pointer-events: none;
+    }
+    .toast.on { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    /* 空输出提示 */
+    .code-empty {
+        padding: 30px 20px; text-align: center; color: var(--st-fg-3); font-size: 13px;
+    }
+    @media (max-width: 1200px) {
+        .layout { flex-wrap: wrap; overflow-y: auto; height: auto; }
+        .editor { width: 100%; min-width: 0; border-right: none; border-bottom: 1px solid var(--st-border); height: 50vh; }
+        .preview-pane { width: 100%; min-width: 0; height: 70vh; }
+        .output { width: 100%; min-width: 0; border-left: none; border-top: 1px solid var(--st-border); height: 45vh; }
+        body { overflow: auto; }
+    }
+</style>
+</head>
+<body data-page-node-id="uCEEfmNMGPiXg49zUfWluO">
+
+<!-- 顶部 -->
+<header class="topbar" data-page-node-id="QUW4M1xdUZmMaPpdNeFvK9">
+    <div class="logo" data-page-node-id="4IYLku53A7DOJ7HGxPwWfA">
+        <svg width="22" height="22" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true" data-page-node-id="1cGPhDklr4BrvqLKcwYnFC"><path fill-rule="evenodd" d="M1.5 2.75a.75.75 0 0 1 .75-.75h11.5a.75.75 0 0 1 0 1.5H2.25a.75.75 0 0 1-.75-.75ZM2.5 6.75a.75.75 0 0 1 .75-.75h9.5a.75.75 0 0 1 0 1.5h-9.5a.75.75 0 0 1-.75-.75Zm-1 4a.75.75 0 0 1 .75-.75h11.5a.75.75 0 0 1 0 1.5H2.25a.75.75 0 0 1-.75-.75Z" data-page-node-id="D8mMlKq5KFLhkc6ng4lZGi"></path></svg>
+        <span data-page-node-id="UztUG6XHHCoUSUY2lAzXjh">GitHub Themes Studio</span>
+        <span class="sub" data-page-node-id="KRTTVRjjn8FVqKPALPX8Zs">主题创作 · 实时预览 · 一键生成</span>
+    </div>
+    <div class="spacer" data-page-node-id="FAS81sP9HDW150RW4kvsma"></div>
+    <span class="hint" data-page-node-id="F14MbHQ35d6c0dzkLKH7g8">适配 GithubTheme.js @v1.3.0.0 · 18 语义 Token</span>
+    <button class="btn ghost" id="btn-import" title="导入 JSON（.gh-theme 或 .json）" data-page-node-id="QFN6aIMR0KAy9AwltZSdCo">导入</button>
+    <button class="btn" id="btn-export" title="导出当前主题为 JSON" data-page-node-id="HsFgQhtBlTOaRpOoAH6L8k">导出</button>
+    <button class="btn primary" id="btn-copy" data-page-node-id="FBZWN2yOA2V5Wy8VlySq1k">复制配置块</button>
+    <button class="btn accent" id="btn-download" data-page-node-id="Y4o7rX6577M4xAqzBGOSiG">下载 .js</button>
+</header>
+
+<div class="layout" data-page-node-id="ijqQzxHFgdTTSTaoJtiAzo">
+    <!-- ══ 左：编辑 ══ -->
+    <aside class="editor" data-page-node-id="OkCCyyOBWos4zjg2ekANml">
+        <div class="editor-scroll" data-page-node-id="dWENryr8PdGZzrKGkfg3S1">
+            <div class="meta" data-page-node-id="BIsCCpT4qwPfCgzR86CSaJ">
+                <div class="field" data-page-node-id="cB85UrQqtOkKu1gdTjkm06">
+                    <label for="theme-key" data-page-node-id="6f3WlNwOwJUpqBYnjtNpvq">主题 Key</label>
+                    <input id="theme-key" value="my-theme" spellcheck="false" placeholder="my-theme" data-page-node-id="sjwz76AhQMVLEYaR5j3yiQ">
+                </div>
+                <div class="field t" data-page-node-id="gaHARgnkpnSw1cMWtqDi3E">
+                    <label data-page-node-id="nnIQxeNmiXGGpOY90LGKzH">类型</label>
+                    <div class="seg" id="type-seg" data-page-node-id="KkYLLwvGgEfG85oTxmSoso">
+                        <button data-t="light" class="active" data-page-node-id="1KyuojTVS4jWNoH8zFAWGS">浅</button>
+                        <button data-t="dark" data-page-node-id="HXO4PdDCzyD03o7PMW9OR4">深</button>
+                    </div>
+                </div>
+            </div>
+            <div class="meta" style="margin-top:-6px" data-page-node-id="ekUplcEIh6iVIvqNye2DdA">
+                <div class="field" data-page-node-id="Uz7zLDiHuAuQyUbpWnyws0">
+                    <label for="theme-name" data-page-node-id="7fUkdIeSFuPQMrB1Ao24R5">显示名称（可含 emoji）</label>
+                    <input id="theme-name" value="🎨 My Theme" spellcheck="false" data-page-node-id="nAfoHl52WOofPbobnNxfHG">
+                </div>
+            </div>
+
+            <div class="meta" style="margin-bottom:14px;gap:6px" data-page-node-id="G8a9NBd5p0dpVOJl6xg8DN">
+                <select id="base-select" class="base-select" title="载入内置基底主题（与 GithubTheme.js 全量对齐）" data-page-node-id="Fz3n2DAjujBeoorxesRF2C"></select>
+                <button class="btn ghost" id="btn-blank" data-page-node-id="Yb7K8LoKAaGiGlsvJUqoeT">＋ 空白</button>
+            </div>
+
+            <div id="token-groups" data-page-node-id="TD2CmC8ShAdIx6ZfOf9Pd4"></div>
+
+            <div style="margin-top:4px;font-size:11px;color:var(--st-fg-3);line-height:1.7" data-page-node-id="59Na1QIadA4bDuyByYZjRt">
+                <b style="color:var(--st-fg-2)" data-page-node-id="njmFWMdruHY4WleJl71T3o">说明</b>：背景层决定页面/卡片/输入框底色；前景文本是正文层级；语义色驱动按钮、链接与状态；组件色单列 Header 与代码区。修改任意色值，右侧预览实时刷新。
+            </div>
+        </div>
+    </aside>
+
+    <!-- ══ 中：预览 ══ -->
+    <main class="preview-pane" data-page-node-id="Rj1pnofOVCwPYvR0UVMawJ">
+        <div class="preview-tabs" id="preview-tabs" data-page-node-id="eSweJIhRHaQwHuDXfq1Th3">
+            <button class="ptab active" data-tab="repo" data-page-node-id="iRYtnmCFyEFYYRuEyCXUEw">仓库</button>
+            <button class="ptab" data-tab="code" data-page-node-id="vmryYXJV3nRWLE4rR9TcW8">代码</button>
+            <button class="ptab" data-tab="releases" data-page-node-id="8r5JVmaSMLQSQWue2QYc6C">Releases</button>
+            <button class="ptab" data-tab="diff" data-page-node-id="ElNIO9d5TSfmVHbNOapV94">Diff</button>
+        </div>
+        <div class="preview-stage" data-page-node-id="7RjhYzAdwBLLoZFG8C4kkE">
+            <div class="device" id="device" data-page-node-id="C3d0PiEPQ8NokzltRRFaci"></div>
+        </div>
+    </main>
+
+    <!-- ══ 右：输出 ══ -->
+    <aside class="output" data-page-node-id="BBC3l25dvq8UAVTGyjJCrV">
+        <div class="output-head" data-page-node-id="YM8nSLqHU53pyGD3hKokyK">
+            <span class="t" data-page-node-id="tOzjJzOFL08vCDZ2OHr9Z5">生成配置块</span>
+            <span class="status" id="gen-status" data-page-node-id="gT8X4Zv4bKoQ29Zp880EK5"></span>
+        </div>
+        <div class="output-body" data-page-node-id="i4LN1NJD7FudjD8U0mLPLq">
+            <div class="code-empty" id="code-empty" data-page-node-id="TbDwabE8cDskQLJaAsXAAD">编辑左侧 Token 后，此处实时生成可粘贴的配置块</div>
+            <pre id="code-output" style="display:none" data-page-node-id="0RDA7hQBwNeDMb7D4fDHvM"></pre>
+        </div>
+        <div class="output-foot" data-page-node-id="ZawYEMQVNzmyqEbxr2oIuI">
+            <button class="btn ghost" id="btn-copy2" data-page-node-id="LmTSrl0rPwHJT77KaCPA0K">复制</button>
+            <button class="btn" id="btn-export2" data-page-node-id="8dYAaVYtyhpY2vGvQHqyyx">导出 JSON</button>
+        </div>
+    </aside>
+</div>
+
+<div class="toast" id="toast" data-page-node-id="aCsyoCfuCyBHh7Ax78pugl"></div>
+
+<script>
+'use strict';
+
+function ghGenVars(t) {
+        // 衍生色值
+        const accentHover    = ghLightenOrDarken(t.bgDefault, t.accent, 0.12);
+        const accentActive   = ghLightenOrDarken(t.bgDefault, t.accent, 0.18);
+        const accentSubtle   = ghHexToRgba(t.accent, 0.12);
+        const accentMuted    = ghHexToRgba(t.accent, 0.30);
+        const dangerSubtle   = ghHexToRgba(t.danger, 0.10);
+        const dangerMuted    = ghHexToRgba(t.danger, 0.30);
+        const successSubtle  = ghHexToRgba(t.success, 0.10);
+        const successMuted   = ghHexToRgba(t.success, 0.30);
+        const warningSubtle  = ghHexToRgba(t.warning, 0.10);
+        const warningMuted   = ghHexToRgba(t.warning, 0.30);
+        const doneSubtle     = ghHexToRgba(t.done, 0.10);
+        const doneMuted      = ghHexToRgba(t.done, 0.30);
+        const borderMuted    = ghHexToRgba(t.border, 0.55);
+        const borderSubtle   = ghHexToRgba(t.border, 0.35);
+        const btnHover       = ghAdjustBrightness(t.bgSubtle, t.type === 'dark' ? 8 : -4);
+        const btnActive      = ghAdjustBrightness(t.bgSubtle, t.type === 'dark' ? -4 : -8);
+        const controlHover   = ghAdjustBrightness(t.bgInset, t.type === 'dark' ? 8 : -4);
+        const shadowColor    = ghHexToRgba('#000000', t.type === 'dark' ? 0.30 : 0.08);
+        const overlayBg      = t.bgSubtle;
+        const isDark         = t.type === 'dark';
+
+        // Box-row 悬停增强（Release / 列表行）— 左侧竖条跟随主题 accent
+        const boxRowHoverBg  = isDark ? ghHexToRgba(t.accent, 0.18) : ghHexToRgba(t.accent, 0.10);
+
+        // 返回 :root 块，每个声明带 !important（确保覆盖 GitHub 样式并存活 bfcache）
+        const css = /* css */ `
+:root {
+  /* ═══ 核心背景 ═══ */
+  --bgColor-default:        ${t.bgDefault};
+  --bgColor-muted:          ${t.bgSubtle};
+  --bgColor-inset:          ${t.bgInset};
+  --bgColor-emphasis:       ${t.bgEmphasis};
+  --bgColor-transparent:    transparent;
+  --bgColor-white:          ${t.bgDefault};
+  --bgColor-black:          ${t.bgEmphasis};
+  --bgColor-inverse:        ${t.bgEmphasis};
+  --bgColor-disabled:       ${t.bgInset};
+
+  /* ═══ 核心文本 ═══ */
+  --fgColor-default:        ${t.fgDefault};
+  --fgColor-muted:          ${t.fgMuted};
+  --fgColor-subtle:         ${t.fgSubtle};
+  --fgColor-accent:         ${t.accent};
+  --fgColor-onEmphasis:     ${t.fgOnEmphasis};
+  --fgColor-onInverse:      ${t.bgDefault};
+  --fgColor-disabled:       ${t.fgSubtle};
+  --fgColor-link:           ${t.link};
+  --fgColor-white:          ${t.bgDefault};
+  --fgColor-black:          ${t.fgDefault};
+
+  /* ═══ 语义色 — 文本 ═══ */
+  --fgColor-success:        ${t.success};
+  --fgColor-danger:         ${t.danger};
+  --fgColor-attention:      ${t.warning};
+  --fgColor-done:           ${t.done};
+  --fgColor-closed:         ${t.fgMuted};
+  --fgColor-open:           ${t.success};
+  --fgColor-severe:         ${t.danger};
+  --fgColor-neutral:        ${t.fgMuted};
+  --fgColor-sponsors:       ${t.done};
+  --fgColor-upsell:         ${t.done};
+  --fgColor-draft:          ${t.fgMuted};
+
+  /* ═══ 语义色 — 背景 ═══ */
+  --bgColor-success-emphasis:  ${t.success};
+  --bgColor-danger-emphasis:   ${t.danger};
+  --bgColor-attention-emphasis:${t.warning};
+  --bgColor-done-emphasis:     ${t.done};
+  --bgColor-accent-emphasis:   ${t.accent};
+  --bgColor-accent-muted:      ${accentSubtle};
+  --bgColor-success-muted:     ${successSubtle};
+  --bgColor-danger-muted:      ${dangerSubtle};
+  --bgColor-attention-muted:   ${warningSubtle};
+  --bgColor-done-muted:        ${doneSubtle};
+  --bgColor-closed-emphasis:   ${t.fgMuted};
+  --bgColor-closed-muted:      ${ghHexToRgba(t.fgMuted, 0.12)};
+  --bgColor-open-emphasis:     ${t.success};
+  --bgColor-open-muted:        ${successSubtle};
+  --bgColor-severe-emphasis:   ${t.danger};
+  --bgColor-severe-muted:      ${dangerSubtle};
+  --bgColor-neutral-emphasis:  ${t.fgMuted};
+  --bgColor-neutral-muted:     ${ghHexToRgba(t.fgMuted, 0.12)};
+  --bgColor-sponsors-emphasis: ${t.done};
+  --bgColor-sponsors-muted:    ${doneSubtle};
+  --bgColor-upsell-emphasis:   ${t.done};
+  --bgColor-upsell-muted:      ${doneSubtle};
+  --bgColor-draft-emphasis:    ${t.fgMuted};
+  --bgColor-draft-muted:       ${ghHexToRgba(t.fgMuted, 0.12)};
+
+  /* ═══ 边框 ═══ */
+  --borderColor-default:             ${t.border};
+  --borderColor-muted:               ${borderMuted};
+  --borderColor-subtle:              ${borderSubtle};
+  --borderColor-emphasis:            ${t.fgMuted};
+  --borderColor-accent-emphasis:     ${t.accent};
+  --borderColor-accent-muted:        ${accentMuted};
+  --borderColor-success-emphasis:    ${t.success};
+  --borderColor-success-muted:       ${successMuted};
+  --borderColor-danger-emphasis:     ${t.danger};
+  --borderColor-danger-muted:        ${dangerMuted};
+  --borderColor-attention-emphasis:  ${t.warning};
+  --borderColor-attention-muted:     ${warningMuted};
+  --borderColor-done-emphasis:       ${t.done};
+  --borderColor-done-muted:          ${doneMuted};
+  --borderColor-closed-emphasis:     ${t.fgMuted};
+  --borderColor-closed-muted:        ${borderMuted};
+  --borderColor-open-emphasis:       ${t.success};
+  --borderColor-open-muted:          ${successMuted};
+  --borderColor-severe-emphasis:     ${t.danger};
+  --borderColor-severe-muted:        ${dangerMuted};
+  --borderColor-neutral-emphasis:    ${t.fgMuted};
+  --borderColor-neutral-muted:       ${borderMuted};
+  --borderColor-sponsors-emphasis:   ${t.done};
+  --borderColor-sponsors-muted:      ${doneMuted};
+  --borderColor-upsell-emphasis:     ${t.done};
+  --borderColor-upsell-muted:        ${doneMuted};
+  --borderColor-draft-emphasis:      ${t.fgMuted};
+  --borderColor-draft-muted:         ${ghHexToRgba(t.fgMuted, 0.30)};
+  --borderColor-disabled:            ${ghHexToRgba(t.fgMuted, 0.10)};
+  --borderColor-translucent:         ${ghHexToRgba(t.fgDefault, 0.15)};
+  --borderColor-transparent:         transparent;
+
+  /* ═══ Header 导航栏 ═══ */
+  --header-bgColor:             ${t.headerBg};
+  --header-fgColor-default:     ${ghHexToRgba(t.headerFg, 0.75)};
+  --header-fgColor-logo:        ${t.headerFg};
+  --header-borderColor-divider: ${t.border};
+  --headerSearch-bgColor:       ${ghAdjustBrightness(t.headerBg, isDark ? 6 : -6)};
+  --headerSearch-borderColor:   ${t.border};
+
+  /* ═══ Page Header (仓库标题栏) ═══ */
+  --page-header-bgColor: ${t.bgSubtle};
+
+  /* ═══ 卡片 ═══ */
+  --card-bgColor: ${t.bgSubtle};
+
+  /* ═══ 代码区 ═══ */
+  --codeMirror-bgColor:               ${t.codeBg};
+  --codeMirror-fgColor:               ${t.fgDefault};
+  --codeMirror-gutters-bgColor:       ${t.codeBg};
+  --codeMirror-lines-bgColor:         ${t.codeBg};
+  --codeMirror-activeline-bgColor:    ${ghHexToRgba(t.fgDefault, 0.06)};
+  --codeMirror-cursor-fgColor:        ${t.fgDefault};
+  --codeMirror-lineNumber-fgColor:    ${t.fgMuted};
+  --codeMirror-selection-bgColor:     ${accentMuted};
+  --codeMirror-matchingBracket-fgColor: ${t.fgDefault};
+  --codeMirror-gutterMarker-fgColor-default: ${t.bgDefault};
+  --codeMirror-gutterMarker-fgColor-muted:   ${t.fgMuted};
+
+  /* 代码语法高亮 */
+  --codeMirror-syntax-fgColor-comment:  ${t.fgMuted};
+  --codeMirror-syntax-fgColor-constant: ${t.accent};
+  --codeMirror-syntax-fgColor-entity:   ${t.done};
+  --codeMirror-syntax-fgColor-keyword:  ${t.danger};
+  --codeMirror-syntax-fgColor-storage:  ${t.warning};
+  --codeMirror-syntax-fgColor-string:   ${t.success};
+  --codeMirror-syntax-fgColor-support:  ${t.accent};
+  --codeMirror-syntax-fgColor-variable: ${t.warning};
+
+  /* ═══ Prettylights (Markdown 语法高亮) ═══ */
+  --color-prettylights-syntax-comment:                  ${t.fgMuted};
+  --color-prettylights-syntax-constant:                 ${t.accent};
+  --color-prettylights-syntax-entity:                   ${t.done};
+  --color-prettylights-syntax-keyword:                  ${t.danger};
+  --color-prettylights-syntax-string:                   ${t.success};
+  --color-prettylights-syntax-variable:                 ${t.warning};
+  --color-prettylights-syntax-constant-other-reference-link: ${t.success};
+  --color-prettylights-syntax-entity-tag:               ${t.accent};
+  --color-prettylights-syntax-storage-modifier-import:  ${t.fgDefault};
+  --color-prettylights-syntax-markup-bold:              ${t.fgDefault};
+  --color-prettylights-syntax-markup-italic:            ${t.fgDefault};
+  --color-prettylights-syntax-markup-heading:           ${t.accent};
+  --color-prettylights-syntax-markup-inserted-bg:       ${successSubtle};
+  --color-prettylights-syntax-markup-inserted-text:     ${t.success};
+  --color-prettylights-syntax-markup-deleted-bg:        ${dangerSubtle};
+  --color-prettylights-syntax-markup-deleted-text:      ${t.danger};
+  --color-prettylights-syntax-markup-changed-bg:        ${warningSubtle};
+  --color-prettylights-syntax-markup-changed-text:      ${t.warning};
+  --color-prettylights-syntax-markup-ignored-bg:        ${t.accent};
+  --color-prettylights-syntax-markup-ignored-text:      ${t.border};
+  --color-prettylights-syntax-meta-diff-range:          ${t.done};
+  --color-prettylights-syntax-brackethighlighter-angle: ${t.fgMuted};
+  --color-prettylights-syntax-brackethighlighter-unmatched: ${t.danger};
+  --color-prettylights-syntax-sublimelinter-gutter-mark: ${t.fgSubtle};
+  --color-prettylights-syntax-string-regexp:            ${t.accent};
+  --color-prettylights-syntax-markup-list:              ${t.warning};
+  --color-prettylights-syntax-carriage-return-bg:       ${t.danger};
+  --color-prettylights-syntax-carriage-return-text:     ${t.bgInset};
+  --color-prettylights-syntax-invalid-illegal-bg:       ${dangerSubtle};
+  --color-prettylights-syntax-invalid-illegal-text:     ${t.danger};
+
+  /* ═══ 按钮 — Default ═══ */
+  --button-default-bgColor-rest:       ${t.bgSubtle};
+  --button-default-bgColor-hover:      ${btnHover};
+  --button-default-bgColor-active:     ${btnActive};
+  --button-default-bgColor-disabled:   ${t.bgInset};
+  --button-default-bgColor-selected:   ${btnActive};
+  --button-default-fgColor-rest:       ${t.fgDefault};
+  --button-default-fgColor-disabled:   ${t.fgSubtle};
+  --button-default-borderColor-rest:   ${t.border};
+  --button-default-borderColor-hover:  ${t.border};
+  --button-default-borderColor-active: ${t.border};
+  --button-default-borderColor-disabled: ${borderSubtle};
+  --button-default-shadow-resting:     0 1px 0 0 ${ghHexToRgba(t.fgDefault, 0.04)};
+
+  /* ═══ 按钮 — Primary ═══ */
+  --button-primary-bgColor-rest:       ${t.accent};
+  --button-primary-bgColor-hover:      ${accentHover};
+  --button-primary-bgColor-active:     ${accentActive};
+  --button-primary-bgColor-disabled:   ${accentSubtle};
+  --button-primary-fgColor-rest:       ${t.fgOnEmphasis};
+  --button-primary-fgColor-disabled:   ${ghHexToRgba(t.fgOnEmphasis, 0.5)};
+  --button-primary-borderColor-rest:   transparent;
+  --button-primary-borderColor-hover:  transparent;
+  --button-primary-borderColor-active: transparent;
+  --button-primary-borderColor-disabled: transparent;
+  --button-primary-iconColor-rest:     ${ghHexToRgba(t.fgOnEmphasis, 0.8)};
+  --button-primary-iconColor-disabled: ${ghHexToRgba(t.fgOnEmphasis, 0.5)};
+  --button-primary-shadow-selected:    inset 0 1px 0 0 ${ghHexToRgba('#000', 0.15)};
+
+  /* ═══ 按钮 — Danger ═══ */
+  --button-danger-bgColor-rest:        ${t.bgSubtle};
+  --button-danger-bgColor-hover:       ${t.danger};
+  --button-danger-bgColor-active:      ${ghAdjustBrightness(t.danger, -6)};
+  --button-danger-bgColor-disabled:    ${t.bgInset};
+  --button-danger-fgColor-rest:        ${t.danger};
+  --button-danger-fgColor-hover:       ${t.fgOnEmphasis};
+  --button-danger-fgColor-active:      ${t.fgOnEmphasis};
+  --button-danger-fgColor-disabled:    ${ghHexToRgba(t.danger, 0.5)};
+  --button-danger-borderColor-rest:    ${t.border};
+  --button-danger-borderColor-hover:   transparent;
+  --button-danger-borderColor-active:  transparent;
+  --button-danger-iconColor-rest:      ${t.danger};
+  --button-danger-iconColor-hover:     ${t.fgOnEmphasis};
+  --button-danger-iconColor-disabled:  ${ghHexToRgba(t.danger, 0.5)};
+  --button-danger-shadow-selected:     inset 0 1px 0 0 ${ghHexToRgba('#000', 0.15)};
+
+  /* ═══ 按钮 — Outline ═══ */
+  --button-outline-bgColor-rest:       ${t.bgSubtle};
+  --button-outline-bgColor-hover:      ${t.accent};
+  --button-outline-bgColor-active:     ${accentActive};
+  --button-outline-bgColor-disabled:   ${t.bgInset};
+  --button-outline-fgColor-rest:       ${t.accent};
+  --button-outline-fgColor-hover:      ${t.fgOnEmphasis};
+  --button-outline-fgColor-active:     ${t.fgOnEmphasis};
+  --button-outline-fgColor-disabled:   ${ghHexToRgba(t.accent, 0.5)};
+  --button-outline-borderColor-hover:  transparent;
+  --button-outline-borderColor-active: transparent;
+  --button-outline-shadow-selected:    inset 0 1px 0 0 ${ghHexToRgba('#000', 0.15)};
+
+  /* ═══ 按钮 — Invisible ═══ */
+  --button-invisible-bgColor-rest:       transparent;
+  --button-invisible-bgColor-hover:      ${ghHexToRgba(t.fgDefault, 0.08)};
+  --button-invisible-bgColor-active:     ${ghHexToRgba(t.fgDefault, 0.14)};
+  --button-invisible-bgColor-disabled:   transparent;
+  --button-invisible-fgColor-rest:       ${t.fgDefault};
+  --button-invisible-fgColor-hover:      ${t.fgDefault};
+  --button-invisible-fgColor-active:     ${t.fgDefault};
+  --button-invisible-fgColor-disabled:   ${t.fgSubtle};
+  --button-invisible-borderColor-rest:   transparent;
+  --button-invisible-borderColor-hover:  transparent;
+  --button-invisible-borderColor-disabled: transparent;
+  --button-invisible-iconColor-rest:     ${t.fgMuted};
+  --button-invisible-iconColor-hover:    ${t.fgMuted};
+  --button-invisible-iconColor-disabled: ${t.fgSubtle};
+
+  /* ═══ 按钮 — Inactive ═══ */
+  --button-inactive-bgColor: ${t.bgInset};
+  --button-inactive-fgColor: ${t.fgMuted};
+
+  /* ═══ 按钮计数器 ═══ */
+  --buttonCounter-default-bgColor-rest:    ${ghHexToRgba(t.fgDefault, 0.10)};
+  --buttonCounter-invisible-bgColor-rest:  ${ghHexToRgba(t.fgDefault, 0.10)};
+  --buttonCounter-outline-bgColor-rest:    ${ghHexToRgba(t.accent, 0.10)};
+  --buttonCounter-outline-bgColor-hover:   ${ghHexToRgba(t.fgOnEmphasis, 0.20)};
+  --buttonCounter-outline-fgColor-rest:    ${t.accent};
+  --buttonCounter-outline-fgColor-hover:   ${t.fgOnEmphasis};
+  --buttonCounter-outline-fgColor-disabled:${ghHexToRgba(t.accent, 0.5)};
+  --buttonCounter-danger-bgColor-rest:     ${ghHexToRgba(t.danger, 0.10)};
+  --buttonCounter-danger-bgColor-hover:    ${ghHexToRgba(t.fgOnEmphasis, 0.20)};
+  --buttonCounter-danger-fgColor-rest:     ${t.danger};
+  --buttonCounter-danger-fgColor-hover:    ${t.fgOnEmphasis};
+  --buttonCounter-danger-fgColor-disabled: ${ghHexToRgba(t.danger, 0.5)};
+  --buttonCounter-primary-bgColor-rest:    ${ghHexToRgba('#000', 0.15)};
+
+  /* ═══ 按钮快捷键提示 ═══ */
+  --buttonKeybindingHint-default-bgColor-rest:     ${t.bgInset};
+  --buttonKeybindingHint-default-bgColor-disabled: ${t.bgInset};
+  --buttonKeybindingHint-default-fgColor-rest:     ${t.fgMuted};
+  --buttonKeybindingHint-default-fgColor-disabled: ${t.fgSubtle};
+  --buttonKeybindingHint-default-borderColor-rest: ${borderMuted};
+  --buttonKeybindingHint-default-borderColor-disabled: ${borderSubtle};
+  --buttonKeybindingHint-danger-bgColor-rest:      ${t.bgInset};
+  --buttonKeybindingHint-danger-fgColor-rest:      ${t.fgMuted};
+  --buttonKeybindingHint-danger-borderColor-rest:  ${borderMuted};
+  --buttonKeybindingHint-invisible-bgColor-rest:   ${t.bgInset};
+  --buttonKeybindingHint-invisible-fgColor-rest:   ${t.fgMuted};
+  --buttonKeybindingHint-invisible-borderColor-rest: transparent;
+  --buttonKeybindingHint-primary-bgColor-rest:     ${ghHexToRgba('#000', 0.15)};
+  --buttonKeybindingHint-primary-fgColor-rest:     ${t.fgOnEmphasis};
+  --buttonKeybindingHint-primary-borderColor-rest: ${ghHexToRgba(t.fgDefault, 0.15)};
+
+  /* ═══ Star 按钮图标 ═══ */
+  --button-star-iconColor: #EAC54F;
+
+  /* ═══ 表单控件 ═══ */
+  --control-bgColor-rest:         ${t.bgInset};
+  --control-bgColor-hover:        ${controlHover};
+  --control-bgColor-active:       ${btnActive};
+  --control-bgColor-disabled:     ${t.bgInset};
+  --control-bgColor-selected:     ${t.bgInset};
+  --control-fgColor-rest:         ${t.fgDefault};
+  --control-fgColor-disabled:     ${t.fgSubtle};
+  --control-fgColor-placeholder:  ${t.fgMuted};
+  --control-borderColor-rest:     ${t.border};
+  --control-borderColor-emphasis: ${t.fgMuted};
+  --control-borderColor-disabled: ${borderSubtle};
+  --control-borderColor-success:  ${t.success};
+  --control-borderColor-danger:   ${t.danger};
+  --control-borderColor-warning:  ${t.warning};
+  --control-iconColor-rest:       ${t.fgMuted};
+
+  /* 表单控件 — Checked (checkbox/radio) */
+  --control-checked-bgColor-rest:        ${t.accent};
+  --control-checked-bgColor-hover:       ${accentHover};
+  --control-checked-bgColor-active:      ${accentActive};
+  --control-checked-bgColor-disabled:    ${t.fgSubtle};
+  --control-checked-fgColor-rest:        ${t.fgOnEmphasis};
+  --control-checked-fgColor-disabled:    ${t.fgOnEmphasis};
+  --control-checked-borderColor-rest:    ${t.accent};
+  --control-checked-borderColor-hover:   ${accentHover};
+  --control-checked-borderColor-active:  ${accentActive};
+  --control-checked-borderColor-disabled: ${t.fgSubtle};
+  --controlKnob-bgColor-checked:         ${t.fgOnEmphasis};
+  --controlKnob-bgColor-disabled:        ${t.bgInset};
+  --controlKnob-bgColor-rest:            ${t.fgOnEmphasis};
+
+  /* 表单控件 — Danger variant */
+  --control-danger-fgColor-rest:  ${t.danger};
+  --control-danger-fgColor-hover: ${t.danger};
+  --control-danger-bgColor-hover: ${dangerSubtle};
+
+  /* 表单控件 — Transparent */
+  --control-transparent-bgColor-rest:       transparent;
+  --control-transparent-bgColor-hover:      ${ghHexToRgba(t.fgDefault, 0.08)};
+  --control-transparent-bgColor-active:     ${ghHexToRgba(t.fgDefault, 0.14)};
+  --control-transparent-bgColor-selected:   ${ghHexToRgba(t.fgDefault, 0.14)};
+  --control-transparent-borderColor-rest:   transparent;
+  --control-transparent-borderColor-hover:  transparent;
+  --control-transparent-borderColor-active: transparent;
+
+  /* ═══ 下拉菜单 / Overlay ═══ */
+  --overlay-bgColor:       ${overlayBg};
+  --overlay-borderColor:   ${ghHexToRgba(t.border, 0.5)};
+  --overlay-backdrop-bgColor: ${ghHexToRgba('#000000', isDark ? 0.5 : 0.18)};
+
+  /* ═══ 菜单 ═══ */
+  --menu-bgColor-active: ${ghHexToRgba(t.fgDefault, 0.06)};
+  --selectMenu-bgColor-active: ${ghHexToRgba(t.accent, 0.15)};
+  --selectMenu-borderColor: transparent;
+
+  /* ═══ Tooltip ═══ */
+  --tooltip-bgColor: ${t.bgEmphasis};
+  --tooltip-fgColor: ${t.fgOnEmphasis};
+
+  /* ═══ 选中高亮 ═══ */
+  --selection-bgColor: ${accentMuted};
+
+  /* ═══ Focus 轮廓 ═══ */
+  --focus-outlineColor: ${t.accent};
+  --focus-outline-color: ${t.accent};
+
+  /* ═══ 时间线徽章 ═══ */
+  --timelineBadge-bgColor: ${t.bgInset};
+
+  /* ═══ 侧边栏 ═══ */
+  --sideNav-bgColor-selected: ${t.bgDefault};
+
+  /* ═══ 进度条 ═══ */
+  --progressBar-bgColor-accent:    ${t.accent};
+  --progressBar-bgColor-success:   ${t.success};
+  --progressBar-bgColor-danger:    ${t.danger};
+  --progressBar-bgColor-attention: ${t.warning};
+  --progressBar-bgColor-done:      ${t.done};
+  --progressBar-bgColor-neutral:   ${t.fgMuted};
+  --progressBar-bgColor-severe:    ${t.danger};
+  --progressBar-bgColor-sponsors:  ${t.done};
+  --progressBar-track-bgColor:     ${t.border};
+  --progressBar-track-borderColor: transparent;
+
+  /* ═══ 通知 ═══ */
+  --color-notifications-row-bg:      ${t.bgDefault};
+  --color-notifications-row-read-bg: ${t.bgSubtle};
+
+  /* ═══ Avatar ═══ */
+  --avatar-bgColor:     ${t.bgDefault};
+  --avatar-borderColor: ${ghHexToRgba(t.fgDefault, 0.15)};
+  --avatar-shadow:      0 0 0 2px ${ghHexToRgba(t.bgDefault, 0.8)};
+
+  /* ═══ 骨架屏 ═══ */
+  --skeletonLoader-bgColor: ${ghHexToRgba(t.fgDefault, 0.10)};
+
+  /* ═══ 影子 ═══ */
+  --shadow-inset:              inset 0 1px 0 0 ${ghHexToRgba(t.fgDefault, 0.04)};
+  --shadow-resting-xsmall:     0 1px 1px 0 ${ghHexToRgba('#000', isDark ? 0.20 : 0.05)};
+  --shadow-resting-small:      0 1px 1px 0 ${ghHexToRgba('#000', isDark ? 0.20 : 0.05)}, 0 1px 2px 0 ${ghHexToRgba('#000', isDark ? 0.15 : 0.03)};
+  --shadow-resting-medium:     0 1px 1px 0 ${ghHexToRgba('#000', isDark ? 0.20 : 0.06)}, 0 3px 6px 0 ${ghHexToRgba('#000', isDark ? 0.15 : 0.04)};
+  --shadow-floating-small:     0 0 0 1px ${ghHexToRgba(t.border, 0.25)}, 0 6px 12px -3px ${ghHexToRgba('#000', isDark ? 0.4 : 0.06)}, 0 6px 18px 0 ${ghHexToRgba('#000', isDark ? 0.3 : 0.04)};
+  --shadow-floating-medium:    0 0 0 1px ${ghHexToRgba(t.border, 0.25)}, 0 8px 16px -4px ${ghHexToRgba('#000', isDark ? 0.4 : 0.06)}, 0 4px 32px -4px ${ghHexToRgba('#000', isDark ? 0.3 : 0.04)}, 0 24px 48px -12px ${ghHexToRgba('#000', isDark ? 0.25 : 0.04)}, 0 48px 96px -24px ${ghHexToRgba('#000', isDark ? 0.2 : 0.04)};
+  --shadow-floating-large:     0 0 0 1px ${ghHexToRgba(t.border, 0.25)}, 0 40px 80px 0 ${ghHexToRgba('#000', isDark ? 0.45 : 0.10)};
+  --shadow-floating-xlarge:    0 0 0 1px ${ghHexToRgba(t.border, 0.25)}, 0 56px 112px 0 ${ghHexToRgba('#000', isDark ? 0.50 : 0.12)};
+
+  /* ═══ ANSI 终端色 ═══ */
+  --color-ansi-black:           ${t.fgDefault};
+  --color-ansi-black-bright:    ${t.fgMuted};
+  --color-ansi-white:           ${t.fgMuted};
+  --color-ansi-white-bright:    ${t.fgSubtle};
+  --color-ansi-gray:            ${t.fgMuted};
+  --color-ansi-red:             ${t.danger};
+  --color-ansi-red-bright:      ${ghAdjustBrightness(t.danger, 10)};
+  --color-ansi-green:           ${t.success};
+  --color-ansi-green-bright:    ${ghAdjustBrightness(t.success, 10)};
+  --color-ansi-yellow:          ${t.warning};
+  --color-ansi-yellow-bright:   ${ghAdjustBrightness(t.warning, 15)};
+  --color-ansi-blue:            ${t.accent};
+  --color-ansi-blue-bright:     ${ghAdjustBrightness(t.accent, 10)};
+  --color-ansi-magenta:         ${t.done};
+  --color-ansi-magenta-bright:  ${ghAdjustBrightness(t.done, 10)};
+  --color-ansi-cyan:            ${ghAdjustBrightness(t.accent, -6)};
+  --color-ansi-cyan-bright:     ${t.accent};
+
+  /* ═══ 项目面板 ═══ */
+  --color-project-header-bg:   ${t.headerBg};
+  --color-project-sidebar-bg:  ${t.bgDefault};
+  --color-project-gradient-in: ${t.bgDefault};
+  --color-project-gradient-out: transparent;
+
+  /* ═══ Workflow 卡片 ═══ */
+  --color-workflow-card-bg:           ${t.bgSubtle};
+  --color-workflow-card-header-shadow: transparent;
+
+  /* ═══ 用户提及 ═══ */
+  --color-user-mention-fg: ${t.fgDefault};
+
+  /* ═══ Label 标签 (Issue labels) — 使用主题色映射 ═══ */
+  --label-blue-bgColor-rest:    ${ghHexToRgba(t.accent, 0.15)};
+  --label-blue-bgColor-hover:   ${ghHexToRgba(t.accent, 0.30)};
+  --label-blue-bgColor-active:  ${ghHexToRgba(t.accent, 0.45)};
+  --label-blue-fgColor-rest:    ${t.accent};
+  --label-blue-fgColor-hover:   ${ghAdjustBrightness(t.accent, isDark ? 15 : -15)};
+  --label-blue-fgColor-active:  ${ghAdjustBrightness(t.accent, isDark ? 25 : -25)};
+  --label-green-bgColor-rest:   ${ghHexToRgba(t.success, 0.15)};
+  --label-green-bgColor-hover:  ${ghHexToRgba(t.success, 0.30)};
+  --label-green-bgColor-active: ${ghHexToRgba(t.success, 0.45)};
+  --label-green-fgColor-rest:   ${t.success};
+  --label-red-bgColor-rest:     ${ghHexToRgba(t.danger, 0.15)};
+  --label-red-bgColor-hover:    ${ghHexToRgba(t.danger, 0.30)};
+  --label-red-bgColor-active:   ${ghHexToRgba(t.danger, 0.45)};
+  --label-red-fgColor-rest:     ${t.danger};
+  --label-purple-bgColor-rest:  ${ghHexToRgba(t.done, 0.15)};
+  --label-purple-bgColor-hover: ${ghHexToRgba(t.done, 0.30)};
+  --label-purple-bgColor-active:${ghHexToRgba(t.done, 0.45)};
+  --label-purple-fgColor-rest:  ${t.done};
+  --label-orange-bgColor-rest:  ${ghHexToRgba(t.warning, 0.15)};
+  --label-orange-bgColor-hover: ${ghHexToRgba(t.warning, 0.30)};
+  --label-orange-bgColor-active:${ghHexToRgba(t.warning, 0.45)};
+  --label-orange-fgColor-rest:  ${t.warning};
+  --label-gray-bgColor-rest:    ${ghHexToRgba(t.fgMuted, 0.12)};
+  --label-gray-bgColor-hover:   ${ghHexToRgba(t.fgMuted, 0.25)};
+  --label-gray-bgColor-active:  ${ghHexToRgba(t.fgMuted, 0.40)};
+  --label-gray-fgColor-rest:    ${t.fgMuted};
+
+  /* 所有 label border 统一透明 */
+  --label-blue-borderColor:   transparent;
+  --label-green-borderColor:  transparent;
+  --label-red-borderColor:    transparent;
+  --label-purple-borderColor: transparent;
+  --label-orange-borderColor: transparent;
+  --label-gray-borderColor:   transparent;
+  --label-auburn-borderColor: transparent;
+  --label-brown-borderColor:  transparent;
+  --label-coral-borderColor:  transparent;
+  --label-cyan-borderColor:   transparent;
+  --label-indigo-borderColor: transparent;
+  --label-lemon-borderColor:  transparent;
+  --label-lime-borderColor:   transparent;
+  --label-olive-borderColor:  transparent;
+  --label-pine-borderColor:   transparent;
+  --label-pink-borderColor:   transparent;
+  --label-plum-borderColor:   transparent;
+  --label-teal-borderColor:   transparent;
+  --label-yellow-borderColor: transparent;
+
+  /* ═══ 标签 Tag ═══ */
+  --topicTag-borderColor: transparent;
+
+  /* ═══ Reaction 按钮 ═══ */
+  --reactionButton-selected-bgColor-rest:  ${accentSubtle};
+  --reactionButton-selected-bgColor-hover: ${ghHexToRgba(t.accent, 0.20)};
+  --reactionButton-selected-fgColor-rest:  ${t.accent};
+  --reactionButton-selected-fgColor-hover: ${ghAdjustBrightness(t.accent, isDark ? 15 : -15)};
+
+  /* ═══ Underline Nav (标签页导航) ═══ */
+  --underlineNav-borderColor-active: ${t.accent};
+  --underlineNav-borderColor-hover:  ${borderMuted};
+  --underlineNav-iconColor-rest:     ${t.fgMuted};
+
+  /* ═══ Diff Blob ═══ */
+  --color-diff-blob-selected-line-highlight-mix-blend-mode: ${isDark ? 'screen' : 'multiply'};
+
+  /* ═══ Contribution Graph ═══ */
+  --contribution-default-borderColor-0: ${ghHexToRgba(t.fgDefault, 0.06)};
+  --contribution-default-borderColor-1: ${ghHexToRgba(t.fgDefault, 0.06)};
+  --contribution-default-borderColor-2: ${ghHexToRgba(t.fgDefault, 0.06)};
+  --contribution-default-borderColor-3: ${ghHexToRgba(t.fgDefault, 0.06)};
+  --contribution-default-borderColor-4: ${ghHexToRgba(t.fgDefault, 0.06)};
+
+  /* ═══ Discussions 表情框 ═══ */
+  --color-bg-discussions-row-emoji-box: ${ghHexToRgba(t.border, 0.5)};
+
+  /* ═══ Marketing icons ═══ */
+  --color-marketing-icon-primary:   ${t.accent};
+  --color-marketing-icon-secondary: ${ghAdjustBrightness(t.accent, isDark ? 15 : -15)};
+
+  /* ═══ 文本色 (color-text-*) ═══ */
+  --color-text-white: ${t.bgDefault};
+
+  /* ═══ Box-row 悬停增强 — 左侧竖条 / 悬停底色（供 github-boxrow-style 引用） ═══ */
+  --ghb-accent-bar:      ${t.accent};
+  --ghb-boxrow-hover-bg: ${boxRowHoverBg};
+}
+`;
+        // 给所有 CSS 变量声明追加 !important（确保覆盖 GitHub 样式 & bfcache 恢复）
+        return css.replace(/^(  --[\w-]+:[^;]*);$/gm, '$1 !important;');
+    }
+
+    /* ── 颜色工具函数 ──────────────────────────────────────────────── */
+function ghHexToRgba(hex, alpha) {
+        const r = parseInt(hex.slice(1, 3), 16);
+        const g = parseInt(hex.slice(3, 5), 16);
+        const b = parseInt(hex.slice(5, 7), 16);
+        return `rgba(${r},${g},${b},${alpha})`;
+    }
+function ghLightenOrDarken(bg, color, amount) {
+        // amount > 0 → 在暗色背景上变亮 / 亮色背景上变暗（"更强烈"）
+        // 简单实现：混合黑色或白色
+        const r = parseInt(color.slice(1, 3), 16);
+        const g = parseInt(color.slice(3, 5), 16);
+        const b = parseInt(color.slice(5, 7), 16);
+        const bgR = parseInt(bg.slice(1, 3), 16);
+        const bgG = parseInt(bg.slice(3, 5), 16);
+        const bgB = parseInt(bg.slice(5, 7), 16);
+        const bgLum = (bgR * 0.299 + bgG * 0.587 + bgB * 0.114);
+        const isDark = bgLum < 128;
+        const factor = isDark ? 1 + amount : 1 - amount;
+        const nr = Math.min(255, Math.max(0, Math.round(r * factor)));
+        const ng = Math.min(255, Math.max(0, Math.round(g * factor)));
+        const nb = Math.min(255, Math.max(0, Math.round(b * factor)));
+        return '#' + [nr, ng, nb].map(c => c.toString(16).padStart(2, '0')).join('');
+    }
+function ghAdjustBrightness(hex, amount) {
+        const r = parseInt(hex.slice(1, 3), 16);
+        const g = parseInt(hex.slice(3, 5), 16);
+        const b = parseInt(hex.slice(5, 7), 16);
+        const nr = Math.min(255, Math.max(0, r + amount));
+        const ng = Math.min(255, Math.max(0, g + amount));
+        const nb = Math.min(255, Math.max(0, b + amount));
+        return '#' + [nr, ng, nb].map(c => c.toString(16).padStart(2, '0')).join('');
+    }
+
+
+/* ═══════════════════════════════════════════════════════════════
+ *  1. Token 结构与分组元数据（与 GithubTheme.js themes 对齐）
+ * ═══════════════════════════════════════════════════════════════ */
+const GROUPS = [
+    { key: 'bg',   label: '背景层', desc: '页面 / 卡片 / 输入框 / 强调底', fields: [
+        ['bgDefault',    '页面主背景'],
+        ['bgSubtle',     '次级背景（卡片、面板）'],
+        ['bgInset',      '内凹背景（输入框、代码区）'],
+        ['bgEmphasis',   '强调背景（Tooltip、Header 底）'],
+    ]},
+    { key: 'fg',   label: '前景文本', desc: '正文层级颜色', fields: [
+        ['fgDefault',    '正文'],
+        ['fgMuted',      '次级文字'],
+        ['fgSubtle',     '三级文字（占位、禁用）'],
+        ['fgOnEmphasis', '强调背景上的文字'],
+    ]},
+    { key: 'sem',  label: '语义色', desc: '按钮 / 链接 / 状态', fields: [
+        ['accent',   '主强调（链接、主按钮）'],
+        ['success',  '成功 / 合并 / 通过'],
+        ['danger',   '危险 / 删除 / 错误'],
+        ['warning',  '警告 / 注意'],
+        ['done',     '完成 / 合并紫'],
+    ]},
+    { key: 'comp', label: '组件色', desc: 'Header 与代码区', fields: [
+        ['headerBg', '顶部导航栏背景'],
+        ['headerFg', '顶部导航栏文字'],
+        ['codeBg',   '代码区背景'],
+        ['border',   '默认边框'],
+        ['link',     '链接文字色'],
+    ]},
+];
+
+/* ═══════════════════════════════════════════════════════════════
+ *  2. 内置基底主题（取自 GithubTheme.js 真实配置）
+ * ═══════════════════════════════════════════════════════════════ */
+const BASES = {
+    // ═══ 与 GithubTheme.js themes 全量对齐（23 款，字符级一致）═══
+    'nord-light': {
+        key: 'nord-light', name: '❄️ Nord Light', type: 'light',
+        tokens: {
+            bgDefault: '#ECEFF4', bgSubtle: '#E5E9F0', bgInset: '#D8DEE9', bgEmphasis: '#3B4252',
+            fgDefault: '#2E3440', fgMuted: '#4C566A', fgSubtle: '#616E87', fgOnEmphasis: '#ECEFF4',
+            accent: '#3B6290', success: '#4E7034', danger: '#9A4450', warning: '#A04820', done: '#B48EAD',
+            headerBg: '#3B4252', headerFg: '#D8DEE9', codeBg: '#D8DEE9', border: '#C8D0DA', link: '#5E81AC',
+        }
+    },
+    'catppuccin-latte': {
+        key: 'catppuccin-latte', name: '🧋 Catppuccin Latte', type: 'light',
+        tokens: {
+            bgDefault: '#EFF1F5', bgSubtle: '#E6E9EF', bgInset: '#CCD0DA', bgEmphasis: '#4C4F69',
+            fgDefault: '#4C4F69', fgMuted: '#585B6E', fgSubtle: '#8C8FA1', fgOnEmphasis: '#EFF1F5',
+            accent: '#1759D6', success: '#2D7A1E', danger: '#D20F39', warning: '#944F08', done: '#8839EF',
+            headerBg: '#4C4F69', headerFg: '#CCD0DA', codeBg: '#CCD0DA', border: '#BCC0CC', link: '#1759D6',
+        }
+    },
+    'gruvbox-light': {
+        key: 'gruvbox-light', name: '📜 Gruvbox Light', type: 'light',
+        tokens: {
+            bgDefault: '#FBF1C7', bgSubtle: '#F2E5BC', bgInset: '#EBDBB2', bgEmphasis: '#3C3836',
+            fgDefault: '#3C3836', fgMuted: '#665C54', fgSubtle: '#7C6F64', fgOnEmphasis: '#FBF1C7',
+            accent: '#076678', success: '#5E5A0B', danger: '#9D0006', warning: '#AF3A03', done: '#8F3F71',
+            headerBg: '#3C3836', headerFg: '#EBDBB2', codeBg: '#EBDBB2', border: '#D5C4A1', link: '#076678',
+        }
+    },
+    'solarized-light': {
+        key: 'solarized-light', name: '☀️ Solarized Light', type: 'light',
+        tokens: {
+            bgDefault: '#FDF6E3', bgSubtle: '#EEE8D5', bgInset: '#E6DFCC', bgEmphasis: '#073642',
+            fgDefault: '#073642', fgMuted: '#586E75', fgSubtle: '#839496', fgOnEmphasis: '#FDF6E3',
+            accent: '#1A6AA8', success: '#5A6600', danger: '#B52826', warning: '#A83D12', done: '#6C71C4',
+            headerBg: '#073642', headerFg: '#E6DFCC', codeBg: '#E6DFCC', border: '#D3CBB7', link: '#268BD2',
+        }
+    },
+    'amber-light': {
+        key: 'amber-light', name: '🍯 Amber Dawn', type: 'light',
+        tokens: {
+            bgDefault: '#FEF9F0', bgSubtle: '#FDF3E4', bgInset: '#F5E6D0', bgEmphasis: '#3D2E1C',
+            fgDefault: '#3D2E1C', fgMuted: '#6B5740', fgSubtle: '#8B7355', fgOnEmphasis: '#FEF9F0',
+            accent: '#9E5C0E', success: '#4A7230', danger: '#C44233', warning: '#9E5A0C', done: '#8B5CF6',
+            headerBg: '#3D2E1C', headerFg: '#F5E6D0', codeBg: '#F5E6D0', border: '#D4C4A8', link: '#9E5C0E',
+        }
+    },
+    'one-light': {
+        key: 'one-light', name: '💡 One Light', type: 'light',
+        tokens: {
+            bgDefault: '#FAFAFA', bgSubtle: '#F0F0F0', bgInset: '#E8E8E8', bgEmphasis: '#383A42',
+            fgDefault: '#383A42', fgMuted: '#696C77', fgSubtle: '#90949C', fgOnEmphasis: '#FAFAFA',
+            accent: '#3068D6', success: '#3D8038', danger: '#C94555', warning: '#925E00', done: '#A626A4',
+            headerBg: '#383A42', headerFg: '#E8E8E8', codeBg: '#E8E8E8', border: '#D0D0D0', link: '#4078F2',
+        }
+    },
+    'ayu-light': {
+        key: 'ayu-light', name: '🟠 Ayu Light', type: 'light',
+        tokens: {
+            bgDefault: '#FAFAFA', bgSubtle: '#F0F0F0', bgInset: '#E7E8EB', bgEmphasis: '#575F66',
+            fgDefault: '#575F66', fgMuted: '#6A7278', fgSubtle: '#A0A6AE', fgOnEmphasis: '#FAFAFA',
+            accent: '#B04C00', success: '#3D8038', danger: '#C94555', warning: '#8E6010', done: '#7350B0',
+            headerBg: '#575F66', headerFg: '#E7E8EB', codeBg: '#E7E8EB', border: '#D4D6DA', link: '#B04C00',
+        }
+    },
+    'winter-light': {
+        key: 'winter-light', name: '❄️ Winter Frost', type: 'light',
+        tokens: {
+            bgDefault: '#F3F7FB', bgSubtle: '#E8F0F8', bgInset: '#DCE6F0', bgEmphasis: '#1A2B3C',
+            fgDefault: '#2C3E50', fgMuted: '#516B84', fgSubtle: '#718C9E', fgOnEmphasis: '#F3F7FB',
+            accent: '#15689E', success: '#237A5C', danger: '#C4423A', warning: '#9E5408', done: '#7358B5',
+            headerBg: '#1A2B3C', headerFg: '#DCE6F0', codeBg: '#DCE6F0', border: '#C8D6E0', link: '#1A7AB5',
+        }
+    },
+    'paper-light': {
+        key: 'paper-light', name: '📄 Paper', type: 'light',
+        tokens: {
+            bgDefault: '#F8F4EE', bgSubtle: '#F0EBE0', bgInset: '#E8E2D5', bgEmphasis: '#3B3628',
+            fgDefault: '#3B3628', fgMuted: '#6B6352', fgSubtle: '#8B8270', fgOnEmphasis: '#F8F4EE',
+            accent: '#4A6DAE', success: '#4A7C3F', danger: '#C43535', warning: '#9E5E18', done: '#6B4F9E',
+            headerBg: '#3B3628', headerFg: '#E8E2D5', codeBg: '#E8E2D5', border: '#D8D0C0', link: '#4A6DAE',
+        }
+    },
+    'bluloco-light': {
+        key: 'bluloco-light', name: '🔷 Bluloco Light', type: 'light',
+        tokens: {
+            bgDefault: '#F0F4FA', bgSubtle: '#E4ECF6', bgInset: '#D8E2F0', bgEmphasis: '#1E2740',
+            fgDefault: '#2A3348', fgMuted: '#516080', fgSubtle: '#6E7D95', fgOnEmphasis: '#F0F4FA',
+            accent: '#2968C8', success: '#307030', danger: '#B8353D', warning: '#985608', done: '#6B46B8',
+            headerBg: '#1E2740', headerFg: '#D8E2F0', codeBg: '#D8E2F0', border: '#C8D4E4', link: '#2968C8',
+        }
+    },
+    'warm-paper': {
+        key: 'warm-paper', name: '🪶 Warm Paper', type: 'light',
+        tokens: {
+            bgDefault: '#faf7f1', bgSubtle: '#f1ebe1', bgInset: '#e9e1d4', bgEmphasis: '#1d345c',
+            fgDefault: '#3d3730', fgMuted: '#5f564b', fgSubtle: '#857a6b', fgOnEmphasis: '#faf7f1',
+            accent: '#0e6e63', success: '#3e6b34', danger: '#b0404f', warning: '#8f5e16', done: '#52377a',
+            headerBg: '#1d345c', headerFg: '#faf7f1', codeBg: '#e9e1d4', border: '#d8cdbb', link: '#0e6e63',
+        }
+    },
+    'catppuccin-mocha': {
+        key: 'catppuccin-mocha', name: '🌙 Catppuccin Mocha', type: 'dark',
+        tokens: {
+            bgDefault: '#1E1E2E', bgSubtle: '#181825', bgInset: '#11111B', bgEmphasis: '#CDD6F4',
+            fgDefault: '#CDD6F4', fgMuted: '#A6ADC8', fgSubtle: '#6C7086', fgOnEmphasis: '#1E1E2E',
+            accent: '#89B4FA', success: '#A6E3A1', danger: '#F38BA8', warning: '#FAB387', done: '#CBA6F7',
+            headerBg: '#11111B', headerFg: '#CDD6F4', codeBg: '#11111B', border: '#45475A', link: '#89B4FA',
+        }
+    },
+    'tokyo-night': {
+        key: 'tokyo-night', name: '🌃 Tokyo Night', type: 'dark',
+        tokens: {
+            bgDefault: '#1A1B26', bgSubtle: '#16161E', bgInset: '#13131A', bgEmphasis: '#C0CAF5',
+            fgDefault: '#C0CAF5', fgMuted: '#A9B1D6', fgSubtle: '#565F89', fgOnEmphasis: '#1A1B26',
+            accent: '#7AA2F7', success: '#9ECE6A', danger: '#F7768E', warning: '#E0AF68', done: '#BB9AF7',
+            headerBg: '#13131A', headerFg: '#C0CAF5', codeBg: '#13131A', border: '#3B4261', link: '#7AA2F7',
+        }
+    },
+    'everforest-dark': {
+        key: 'everforest-dark', name: '🌲 Everforest Dark', type: 'dark',
+        tokens: {
+            bgDefault: '#2B3339', bgSubtle: '#323C41', bgInset: '#1E2326', bgEmphasis: '#D3C6AA',
+            fgDefault: '#D3C6AA', fgMuted: '#9DA9A0', fgSubtle: '#7A8478', fgOnEmphasis: '#2B3339',
+            accent: '#7FBBB3', success: '#A7C080', danger: '#E67E80', warning: '#DBBC7F', done: '#D699B6',
+            headerBg: '#1E2326', headerFg: '#D3C6AA', codeBg: '#1E2326', border: '#4A555B', link: '#7FBBB3',
+        }
+    },
+    'rose-pine': {
+        key: 'rose-pine', name: '🌹 Rosé Pine', type: 'dark',
+        tokens: {
+            bgDefault: '#191724', bgSubtle: '#1F1D2E', bgInset: '#13111C', bgEmphasis: '#E0DEF4',
+            fgDefault: '#E0DEF4', fgMuted: '#908CAA', fgSubtle: '#6E6A86', fgOnEmphasis: '#191724',
+            accent: '#C4A7E7', success: '#9CCFD8', danger: '#EB6F92', warning: '#F6C177', done: '#C4A7E7',
+            headerBg: '#13111C', headerFg: '#E0DEF4', codeBg: '#13111C', border: '#403D52', link: '#C4A7E7',
+        }
+    },
+    'amber-dark': {
+        key: 'amber-dark', name: '🥃 Amber Night', type: 'dark',
+        tokens: {
+            bgDefault: '#1E1810', bgSubtle: '#241E15', bgInset: '#15110C', bgEmphasis: '#E8DCC8',
+            fgDefault: '#E8DCC8', fgMuted: '#B8A88A', fgSubtle: '#8B7D65', fgOnEmphasis: '#1E1810',
+            accent: '#E8A840', success: '#7CB342', danger: '#E05545', warning: '#F0A030', done: '#A78BFA',
+            headerBg: '#15110C', headerFg: '#E8DCC8', codeBg: '#15110C', border: '#4A3F2E', link: '#E8A840',
+        }
+    },
+    'dracula': {
+        key: 'dracula', name: '🧛 Dracula', type: 'dark',
+        tokens: {
+            bgDefault: '#282A36', bgSubtle: '#21222C', bgInset: '#191A21', bgEmphasis: '#F8F8F2',
+            fgDefault: '#F8F8F2', fgMuted: '#888EBF', fgSubtle: '#44475A', fgOnEmphasis: '#282A36',
+            accent: '#8BE9FD', success: '#50FA7B', danger: '#FF6B75', warning: '#FFB86C', done: '#BD93F9',
+            headerBg: '#191A21', headerFg: '#F8F8F2', codeBg: '#191A21', border: '#44475A', link: '#8BE9FD',
+        }
+    },
+    'one-dark': {
+        key: 'one-dark', name: '🌑 One Dark', type: 'dark',
+        tokens: {
+            bgDefault: '#282C34', bgSubtle: '#21252B', bgInset: '#1B1E24', bgEmphasis: '#ABB2BF',
+            fgDefault: '#ABB2BF', fgMuted: '#8B93A0', fgSubtle: '#3E4452', fgOnEmphasis: '#282C34',
+            accent: '#61AFEF', success: '#98C379', danger: '#FF6A7A', warning: '#E5C07B', done: '#D48DED',
+            headerBg: '#1B1E24', headerFg: '#ABB2BF', codeBg: '#1B1E24', border: '#383E4A', link: '#61AFEF',
+        }
+    },
+    'monokai': {
+        key: 'monokai', name: '🎹 Monokai', type: 'dark',
+        tokens: {
+            bgDefault: '#272822', bgSubtle: '#1E1F1A', bgInset: '#171812', bgEmphasis: '#F8F8F0',
+            fgDefault: '#F8F8F0', fgMuted: '#8F9086', fgSubtle: '#6A6B61', fgOnEmphasis: '#272822',
+            accent: '#66D9EF', success: '#A6E22E', danger: '#F97074', warning: '#E6DB74', done: '#AE81FF',
+            headerBg: '#171812', headerFg: '#F8F8F0', codeBg: '#171812', border: '#49483E', link: '#66D9EF',
+        }
+    },
+    'gruvbox-dark': {
+        key: 'gruvbox-dark', name: '🟫 Gruvbox Dark', type: 'dark',
+        tokens: {
+            bgDefault: '#282828', bgSubtle: '#1D2021', bgInset: '#181818', bgEmphasis: '#EBDBB2',
+            fgDefault: '#EBDBB2', fgMuted: '#A89984', fgSubtle: '#7C6F64', fgOnEmphasis: '#282828',
+            accent: '#83A598', success: '#B8BB26', danger: '#FF6050', warning: '#FABD2F', done: '#D3869B',
+            headerBg: '#181818', headerFg: '#EBDBB2', codeBg: '#181818', border: '#504945', link: '#83A598',
+        }
+    },
+    'ayu-mirage': {
+        key: 'ayu-mirage', name: '🌊 Ayu Mirage', type: 'dark',
+        tokens: {
+            bgDefault: '#1F2430', bgSubtle: '#191E2A', bgInset: '#141822', bgEmphasis: '#D9D7CE',
+            fgDefault: '#D9D7CE', fgMuted: '#8A9199', fgSubtle: '#5C6773', fgOnEmphasis: '#1F2430',
+            accent: '#FFCC66', success: '#AAD94C', danger: '#FF8080', warning: '#FFB454', done: '#D2A6FF',
+            headerBg: '#141822', headerFg: '#D9D7CE', codeBg: '#141822', border: '#33415E', link: '#FFCC66',
+        }
+    },
+    'warm-paper-dark': {
+        key: 'warm-paper-dark', name: '🕯️ Warm Paper Dark', type: 'dark',
+        tokens: {
+            bgDefault: '#262322', bgSubtle: '#312d29', bgInset: '#1a1815', bgEmphasis: '#e9e2d6',
+            fgDefault: '#e9e2d6', fgMuted: '#b0a58f', fgSubtle: '#8a8070', fgOnEmphasis: '#262322',
+            accent: '#6db3a3', success: '#a3c98f', danger: '#e58a98', warning: '#e3b26a', done: '#ad94d9',
+            headerBg: '#1b2a45', headerFg: '#e9e2d6', codeBg: '#1d1a17', border: '#47413a', link: '#6db3a3',
+        }
+    },
+    'vscode-2026-dark': {
+        key: 'vscode-2026-dark', name: '💻 2026 Dark', type: 'dark',
+        tokens: {
+            bgDefault: '#191A1B', bgSubtle: '#202122', bgInset: '#121314', bgEmphasis: '#333536',
+            fgDefault: '#bfbfbf', fgMuted: '#8C8C8C', fgSubtle: '#7a7b7d', fgOnEmphasis: '#ffffff',
+            accent: '#297AA0', success: '#73c991', danger: '#f48771', warning: '#e5ba7d', done: '#d2a8ff',
+            headerBg: '#121314', headerFg: '#bfbfbf', codeBg: '#121314', border: '#333536', link: '#48A0C7',
+        }
+    },
+    'blank-light': { key: '', name: '🎨 My Theme', type: 'light', tokens: blankTokens('#ffffff') },
+    'blank-dark':  { key: '', name: '🎨 My Theme', type: 'dark',  tokens: blankTokens('#0d1117') },
+};
+function blankTokens(bg) {
+    return {
+        bgDefault: bg, bgSubtle: mix(bg, '#000000', .03), bgInset: mix(bg, '#000000', .05), bgEmphasis: mix(bg, '#000000', .55),
+        fgDefault: mix(bg, '#000000', .78), fgMuted: mix(bg, '#000000', .62), fgSubtle: mix(bg, '#000000', .48), fgOnEmphasis: mix(bg, '#000000', .78),
+        accent: '#0969da', success: '#1a7f37', danger: '#cf222e', warning: '#9a6700', done: '#8250df',
+        headerBg: mix(bg, '#000000', .8), headerFg: '#ffffff', codeBg: mix(bg, '#000000', .05), border: mix(bg, '#000000', .22), link: '#0969da',
+    };
+}
+
+/* 颜色工具 —— 与 GithubTheme.js 算法一致 */
+function hexToRgb(hex) {
+    let h = hex.replace('#', '');
+    if (h.length === 3) h = h.split('').map(c => c + c).join('');
+    const n = parseInt(h, 16);
+    return { r: (n >> 16) & 255, g: (n >> 8) & 255, b: n & 255 };
+}
+function rgbToHex(r, g, b) {
+    const c = v => Math.min(255, Math.max(0, Math.round(v))).toString(16).padStart(2, '0');
+    return '#' + c(r) + c(g) + c(b);
+}
+function isDark(bgHex) {
+    const { r, g, b } = hexToRgb(bgHex);
+    return (r * 0.299 + g * 0.587 + b * 0.114) < 128;
+}
+function mix(a, b, t) {
+    const A = hexToRgb(a), B = hexToRgb(b);
+    return rgbToHex(A.r + (B.r - A.r) * t, A.g + (B.g - A.g) * t, A.b + (B.b - A.b) * t);
+}
+function alpha(hex, a) {
+    const { r, g, b } = hexToRgb(hex);
+    return `rgba(${r},${g},${b},${a})`;
+}
+/* 与主脚本 lightenOrDarken 同向：暗底提亮 1+a、亮底压暗 1-a */
+function lightenOrDarken(bg, color, amount) {
+    const A = hexToRgb(bg);
+    const f = isDark(bg) ? 1 + amount : 1 - amount;
+    return rgbToHex(hexToRgb(color).r * f, hexToRgb(color).g * f, hexToRgb(color).b * f);
+}
+function adjustBrightness(hex, amount) {
+    const c = hexToRgb(hex);
+    return rgbToHex(c.r + amount, c.g + amount, c.b + amount);
+}
+/* WCAG 对比度 */
+function luminance(hex) {
+    const { r, g, b } = hexToRgb(hex);
+    const f = v => { v /= 255; return v <= .03928 ? v / 12.92 : Math.pow((v + .055) / 1.055, 2.4); };
+    return .2126 * f(r) + .7152 * f(g) + .0722 * f(b);
+}
+function contrast(a, b) {
+    const L1 = luminance(a), L2 = luminance(b);
+    const [hi, lo] = L1 > L2 ? [L1, L2] : [L2, L1];
+    return (hi + .05) / (lo + .05);
+}
+function caLevel(ratio) {
+    if (ratio >= 4.5) return { cls: 'ok', txt: 'AA ' + ratio.toFixed(1) };
+    if (ratio >= 3) return { cls: 'warn', txt: 'A ' + ratio.toFixed(1) };
+    return { cls: 'bad', txt: ratio.toFixed(1) };
+}
+
+/* ═══════════════════════════════════════════════════════════════
+ *  3. 全局状态
+ * ═══════════════════════════════════════════════════════════════ */
+const state = {
+    type: 'light',
+    tokens: { ...BASES['nord-light'].tokens },
+    key: 'my-theme',
+    name: '🎨 My Theme',
+    activeTab: 'repo',
+};
+let bindings = [];       // [{field, swatch, hex}]
+let timer = null;
+
+/* ═══════════════════════════════════════════════════════════════
+ *  4. 左侧编辑器渲染
+ * ═══════════════════════════════════════════════════════════════ */
+const TOKEN_FIELD_ORDER = ['bgDefault','bgSubtle','bgInset','bgEmphasis','fgDefault','fgMuted','fgSubtle','fgOnEmphasis','accent','success','danger','warning','done','headerBg','headerFg','codeBg','border','link'];
+
+function buildEditor() {
+    const container = document.getElementById('token-groups');
+    container.innerHTML = '';
+    bindings = [];
+
+    GROUPS.forEach(grp => {
+        const sec = document.createElement('div');
+        sec.className = 'grp';
+        const title = document.createElement('div');
+        title.className = 'grp-title';
+        title.innerHTML = grp.label + ' <span class="chip">' + grp.desc + '</span>';
+        sec.appendChild(title);
+
+        grp.fields.forEach(([field, desc]) => {
+            const row = document.createElement('div');
+            row.className = 'token-row';
+
+            const swatch = document.createElement('div');
+            swatch.className = 'swatch';
+            swatch.style.background = state.tokens[field];
+            const picker = document.createElement('input');
+            picker.type = 'color';
+            picker.value = normalize(state.tokens[field]);
+            swatch.appendChild(picker);
+
+            const lbl = document.createElement('div');
+            lbl.className = 'lbl';
+            const k = document.createElement('div');
+            k.className = 'k';
+            k.textContent = field;
+            lbl.appendChild(k);
+
+            const hex = document.createElement('input');
+            hex.className = 'hex';
+            hex.value = state.tokens[field];
+            hex.spellcheck = false;
+
+            row.appendChild(swatch);
+            row.appendChild(lbl);
+            row.appendChild(hex);
+
+            // 仅给两个关键可读性对照加对比度徽标
+            let caEl = null;
+            if (field === 'fgDefault') {
+                caEl = document.createElement('span');
+                caEl.className = 'ca-badge';
+                caEl.dataset.for = 'fgDefault-vs-bg';
+                row.appendChild(caEl);
+            } else if (field === 'fgOnEmphasis') {
+                caEl = document.createElement('span');
+                caEl.className = 'ca-badge';
+                caEl.dataset.for = 'fgOnEmphasis-vs-accent';
+                row.appendChild(caEl);
+            }
+
+            sec.appendChild(row);
+            bindings.push({ field, swatch, hex, caEl });
+        });
+        container.appendChild(sec);
+    });
+}
+
+// 事件委托只绑定一次（bindings 为模块级引用，重建后依然有效）
+function bindTokenEvents() {
+    const groups = document.getElementById('token-groups');
+    groups.addEventListener('input', (e) => {
+        const target = e.target;
+        if (target.type === 'color' || target.classList.contains('hex')) {
+            const b = bindings.find(x => x.hex === target || x.swatch.querySelector('input') === target);
+            if (!b) return;
+            const val = target.type === 'color' ? target.value : normalize(target.value);
+            if (val) commitToken(b.field, val);
+        }
+    });
+    groups.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && e.target.classList.contains('hex')) {
+            const b = bindings.find(x => x.hex === e.target);
+            if (b) commitToken(b.field, normalize(e.target.value), true);
+        }
+    });
+}
+
+function normalize(h) {
+    if (!h) return null;
+    let v = h.trim();
+    if (/^[0-9a-fA-F]{6}$/.test(v)) return '#' + v;
+    if (/^#[0-9a-fA-F]{6}$/.test(v)) return v;
+    if (/^[0-9a-fA-F]{3}$/.test(v)) return '#' + v;
+    if (/^#[0-9a-fA-F]{3}$/.test(v)) return '#' + v[1] + v[1] + v[2] + v[2] + v[3] + v[3];
+    return null;
+}
+
+function commitToken(field, val, force) {
+    const b = bindings.find(x => x.field === field);
+    if (!val) {
+        if (b) b.hex.classList.add('err');
+        return;
+    }
+    if (b) {
+        b.hex.classList.remove('err');
+        b.hex.value = val;
+        b.swatch.style.background = val;
+        const picker = b.swatch.querySelector('input');
+        if (picker) picker.value = val;
+    }
+    if (state.tokens[field] !== val || force) {
+        state.tokens[field] = val;
+        scheduleUpdate();
+    }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+ *  5. CSS 变量生成（预览用 —— 与主脚本 generateCSSVariables 同构）
+ * ═══════════════════════════════════════════════════════════════ */
+/* ═══════════════════════════════════════════════════════════════
+ *  6. 高保真预览 —— 真实 GitHub Primer DOM + 引擎 402 CSS 变量
+ *  方案：.device 挂载 Shadow DOM；变量块由 ghGenVars（与主脚本同构）
+ *  生成后 scoped 到 .ghs，场景内全部使用 GitHub 真实 classNames
+ *  （Header/UnderlineNav/Box/Box-row/btn/Label/Counter/Truncate/octicon）。
+ * ═══════════════════════════════════════════════════════════════ */
+
+/* ---------- Octicons（GitHub 官方 16×16 path） ---------- */
+const OCT = {
+    mark: 'M8 0c4.42 0 8 3.58 8 8a8.013 8.013 0 0 1-5.45 7.59c-.4.08-.55-.17-.55-.38 0-.27.01-1.13.01-2.2 0-.75-.25-1.23-.54-1.48 1.78-.2 3.65-.88 3.65-3.95 0-.88-.31-1.59-.82-2.15.08-.2.36-1.02-.08-2.12 0 0-.67-.22-2.2.82-.64-.18-1.32-.27-2-.27-.68 0-1.36.09-2 .27-1.53-1.03-2.2-.82-2.2-.82-.44 1.1-.16 1.92-.08 2.12-.51.56-.82 1.28-.82 2.15 0 3.06 1.86 3.75 3.64 3.95-.23.2-.44.55-.51 1.07-.46.21-1.61.55-2.33-.66-.15-.24-.6-.83-1.23-.82-.67.01-.27.38.01.53.34.19.73.9.82 1.13.16.45.68 1.31 2.69.94 0 .67.01 1.3.01 1.49 0 .21-.15.45-.55.38A7.995 7.995 0 0 1 0 8c0-4.42 3.58-8 8-8Z',
+    search: 'M10.68 11.74a6 6 0 0 1-7.922-8.982 6 6 0 0 1 8.982 7.922l3.04 3.04a.749.749 0 0 1-.326 1.275.749.749 0 0 1-.734-.215ZM11.5 7a4.499 4.499 0 1 0-8.997 0A4.499 4.499 0 0 0 11.5 7Z',
+    bell: 'M8 16a2 2 0 0 0 1.985-1.75c.017-.137-.097-.25-.235-.25h-3.5c-.138 0-.252.113-.235.25A2 2 0 0 0 8 16ZM3 5a5 5 0 0 1 10 0v2.947c0 .05.015.098.042.139l1.703 2.555A1.519 1.519 0 0 1 13.482 13H2.518a1.516 1.516 0 0 1-1.263-2.36l1.703-2.554A.545.545 0 0 0 3 7.947Zm5-3.5A3.5 3.5 0 0 0 4.5 5v2.947c0 .346-.102.683-.294.97l-1.703 2.556a.017.017 0 0 0-.003.01l.001.006c0 .002.002.004.004.006l.006.004.007.001h10.964l.007-.001.006-.004.004-.006.001-.006a.017.017 0 0 0-.003-.01l-1.703-2.554a1.745 1.745 0 0 1-.294-.97V5A3.5 3.5 0 0 0 8 1.5Z',
+    repo: 'M2 2.5A2.5 2.5 0 0 1 4.5 0h8.75a.75.75 0 0 1 .75.75v12.5a.75.75 0 0 1-.75.75h-2.5a.75.75 0 0 1 0-1.5h1.75v-2h-8a1 1 0 0 0-.714 1.7c.1.1.17.21.214.32h2.5a.75.75 0 0 1 0 1.5H4.5A2.5 2.5 0 0 1 2 11.5v-9Zm10.5-1V9h-8c-.356 0-.694.074-1 .208V2.5a1 1 0 0 1 1-1h8ZM5 12.25v3.25a.25.25 0 0 0 .4.2l1.45-1.087a.25.25 0 0 1 .3 0L8.6 15.7a.25.25 0 0 0 .4-.2v-3.25a.25.25 0 0 0-.25-.25h-3.5a.25.25 0 0 0-.25.25Z',
+    star: 'M8 .25a.75.75 0 0 1 .673.418l1.882 3.815 4.21.612a.75.75 0 0 1 .416 1.279l-3.046 2.97.719 4.192a.751.751 0 0 1-1.088.791L8 12.347l-3.766 1.98a.75.75 0 0 1-1.088-.79l.72-4.194L.818 6.374a.75.75 0 0 1 .416-1.28l4.21-.611L7.327.668A.75.75 0 0 1 8 .25Zm0 2.445L6.615 5.5a.75.75 0 0 1-.564.41l-3.097.45 2.24 2.184a.75.75 0 0 1 .216.664l-.528 3.084 2.769-1.456a.75.75 0 0 1 .698 0l2.77 1.456-.53-3.084a.75.75 0 0 1 .216-.664l2.24-2.183-3.096-.45a.75.75 0 0 1-.564-.41Z',
+    fork: 'M5 5.372v.878c0 .414.336.75.75.75h4.5a.75.75 0 0 0 .75-.75v-.878a2.25 2.25 0 1 1 1.5 0v.878a2.25 2.25 0 0 1-2.25 2.25h-1.5v2.128a2.251 2.251 0 1 1-1.5 0V8.5h-1.5A2.25 2.25 0 0 1 3.5 6.25v-.878a2.25 2.25 0 1 1 1.5 0ZM5 3.25a.75.75 0 1 0-1.5 0 .75.75 0 0 0 1.5 0Zm6.75.75a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5Zm-3 8.75a.75.75 0 1 0-1.5 0 .75.75 0 0 0 1.5 0Z',
+    eye: 'M8 2c1.981 0 3.671.992 4.933 2.078 1.27 1.091 2.187 2.345 2.637 3.023a1.62 1.62 0 0 1 0 1.798c-.45.678-1.367 1.932-2.637 3.023C11.67 13.008 9.981 14 8 14c-1.981 0-3.671-.992-4.933-2.078C1.797 10.83.88 9.576.43 8.898a1.62 1.62 0 0 1 0-1.798c.45-.677 1.367-1.931 2.637-3.022C4.33 2.992 6.019 2 8 2ZM1.679 7.932a.12.12 0 0 0 0 .136c.411.622 1.241 1.75 2.366 2.717C5.176 11.758 6.527 12.5 8 12.5s2.825-.742 3.955-1.715c1.124-.967 1.954-2.096 2.366-2.717a.12.12 0 0 0 0-.136c-.412-.621-1.242-1.75-2.366-2.717C10.824 4.242 9.473 3.5 8 3.5s-2.825.742-3.955 1.715c-1.124.967-1.954 2.096-2.366 2.717ZM8 10a2 2 0 1 1-.001-3.999A2 2 0 0 1 8 10Z',
+    branch: 'M9.5 3.25a2.25 2.25 0 1 1 3 2.122V6A2.5 2.5 0 0 1 10 8.5H6a1 1 0 0 0-1 1v1.128a2.251 2.251 0 1 1-1.5 0V5.372a2.25 2.25 0 1 1 1.5 0v1.836A2.493 2.493 0 0 1 6 7h4a1 1 0 0 0 1-1v-.628A2.25 2.25 0 0 1 9.5 3.25Zm-6 0a.75.75 0 1 0 1.5 0 .75.75 0 0 0-1.5 0Zm8.25-.75a.75.75 0 1 0 0 1.5.75.75 0 0 0 0-1.5ZM2.25 12a.75.75 0 1 0 0 1.5.75.75 0 0 0 0-1.5Z',
+    tag: 'M1 7.775V2.75C1 1.784 1.784 1 2.75 1h5.025c.464 0 .91.184 1.238.513l6.25 6.25a1.75 1.75 0 0 1 0 2.474l-5.026 5.026a1.75 1.75 0 0 1-2.474 0l-6.25-6.25A1.752 1.752 0 0 1 1 7.775Zm1.5 0c0 .066.026.13.073.177l6.25 6.25a.25.25 0 0 0 .354 0l5.025-5.025a.25.25 0 0 0 0-.354l-6.25-6.25a.25.25 0 0 0-.177-.073H2.75a.25.25 0 0 0-.25.25ZM6 5a1 1 0 1 1 0 2 1 1 0 0 1 0-2Z',
+    commit: 'M11.93 8.5a4.002 4.002 0 0 1-7.86 0H.75a.75.75 0 0 1 0-1.5h3.32a4.002 4.002 0 0 1 7.86 0h3.32a.75.75 0 0 1 0 1.5Zm-1.43-.75a2.5 2.5 0 1 0-5 0 2.5 2.5 0 0 0 5 0Z',
+    dir: 'M1.75 1A1.75 1.75 0 0 0 0 2.75v10.5C0 14.216.784 15 1.75 15h12.5A1.75 1.75 0 0 0 16 13.25v-8.5A1.75 1.75 0 0 0 14.25 3H7.5a.25.25 0 0 1-.2-.1l-.9-1.2C6.07 1.26 5.55 1 5 1H1.75Z',
+    file: 'M2 1.75C2 .784 2.784 0 3.75 0h6.586c.464 0 .909.184 1.237.513l2.914 2.914c.329.328.513.773.513 1.237v9.586A1.75 1.75 0 0 1 13.25 16h-9.5A1.75 1.75 0 0 1 2 14.25Zm1.75-.25a.25.25 0 0 0-.25.25v12.5c0 .138.112.25.25.25h9.5a.25.25 0 0 0 .25-.25V6h-2.75A1.75 1.75 0 0 1 9 4.25V1.5Zm6.75.062V4.25c0 .138.112.25.25.25h2.688Z',
+    code: 'M4.72 3.22a.75.75 0 0 1 1.06 1.06L2.06 8l3.72 3.72a.75.75 0 1 1-1.06 1.06L.72 8.53a.75.75 0 0 1 0-1.06l4-4.25ZM11.28 3.22a.75.75 0 0 0-1.06 1.06L13.94 8l-3.72 3.72a.75.75 0 1 0 1.06 1.06l4-4.25a.75.75 0 0 0 0-1.06l-4-4.25Z',
+    download: 'M2.75 14A1.75 1.75 0 0 1 1 12.25v-2.5a.75.75 0 0 1 1.5 0v2.5c0 .138.112.25.25.25h10.5a.25.25 0 0 0 .25-.25v-2.5a.75.75 0 0 1 1.5 0v2.5A1.75 1.75 0 0 1 13.25 14Z',
+    pr: 'M1.5 3.25a2.25 2.25 0 1 1 3 2.122v5.256a2.251 2.251 0 1 1-1.5 0V5.372A2.25 2.25 0 0 1 1.5 3.25Zm5.677-.177L9.573.677A.25.25 0 0 1 10 .854V2.5h1A2.5 2.5 0 0 1 13.5 5v5.628a2.251 2.251 0 1 1-1.5 0V5a1 1 0 0 0-1-1h-1v1.646a.25.25 0 0 1-.427.177L7.177 3.427a.25.25 0 0 1 0-.354ZM3.75 2.5a.75.75 0 1 0 0 1.5.75.75 0 0 0 0-1.5Zm0 9.5a.75.75 0 1 0 0 1.5.75.75 0 0 0 0-1.5Zm8.25.75a.75.75 0 1 0 1.5 0 .75.75 0 0 0-1.5 0Z',
+    issue: 'M8 9.5a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3ZM8 0a8 8 0 1 1 0 16A8 8 0 0 1 8 0ZM1.5 8a6.5 6.5 0 1 0 13 0 6.5 6.5 0 0 0-13 0Z',
+    comment: 'M1 2.75C1 1.784 1.784 1 2.75 1h10.5c.966 0 1.75.784 1.75 1.75v7.5A1.75 1.75 0 0 1 13.25 12H9.06l-2.573 2.573A1.458 1.458 0 0 1 4 13.543V12H2.75A1.75 1.75 0 0 1 1 10.25Zm1.75-.25a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h2a.75.75 0 0 1 .75.75v2.19l2.72-2.72a.749.749 0 0 1 .53-.22h4.5a.25.25 0 0 0 .25-.25v-7.5a.25.25 0 0 0-.25-.25Z',
+    check: 'M13.78 4.22a.75.75 0 0 1 0 1.06l-7.25 7.25a.75.75 0 0 1-1.06 0L2.22 9.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018L6 10.94l6.72-6.72a.75.75 0 0 1 1.06 0Z',
+    history: 'M8 0a8 8 0 1 1 0 16A8 8 0 0 1 8 0ZM1.5 8a6.5 6.5 0 1 0 13 0 6.5 6.5 0 0 0-13 0Zm7-3.25v2.992l2.028.812a.75.75 0 0 1-.557 1.392l-2.5-1A.751.751 0 0 1 7 8.25v-3.5a.75.75 0 0 1 1.5 0Z',
+    package: 'm8.878.392 5.25 3.045c.54.314.872.89.872 1.514v6.098a1.75 1.75 0 0 1-.872 1.514l-5.25 3.045a1.75 1.75 0 0 1-1.756 0l-5.25-3.045A1.75 1.75 0 0 1 1 11.049V4.951c0-.624.332-1.201.872-1.514L7.122.392a1.75 1.75 0 0 1 1.756 0ZM7.875 1.69l-4.63 2.685L8 7.133l4.755-2.758-4.63-2.685a.248.248 0 0 0-.25 0ZM2.5 5.677v5.372c0 .09.047.171.125.216l4.625 2.683V8.432Zm6.25 8.271 4.625-2.683a.25.25 0 0 0 .125-.216V5.677L8.75 8.432Z',
+    plus: 'M7.75 2a.75.75 0 0 1 .75.75V7h4.25a.75.75 0 0 1 0 1.5H8.5v4.25a.75.75 0 0 1-1.5 0V8.5H2.75a.75.75 0 0 1 0-1.5H7V2.75A.75.75 0 0 1 7.75 2Z',
+    chevron: 'M3.22 4.72a.75.75 0 0 1 1.06 0L8 8.44l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L3.22 5.78a.75.75 0 0 1 0-1.06Z',
+    kebab: 'M8 9a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3ZM1.5 9a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3Zm13 0a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3Z',
+    paper: 'M2.22 2.22a.75.75 0 0 1 1.06 0L6 4.94 9.28 1.66a.75.75 0 1 1 1.06 1.06L7.06 6l3.28 3.28a.75.75 0 1 1-1.06 1.06L6 7.06l-3.28 3.28a.75.75 0 0 1-1.06-1.06L4.94 6 1.66 2.72a.75.75 0 0 1 0-1.06Z',
+    book: 'M0 1.75A.75.75 0 0 1 .75 1h4.253c1.227 0 2.317.59 3 1.501A3.743 3.743 0 0 1 11.006 1h4.245a.75.75 0 0 1 .75.75v10.5a.75.75 0 0 1-.75.75h-4.507a2.25 2.25 0 0 0-1.591.659l-.622.621a.75.75 0 0 1-1.06 0l-.622-.621A2.25 2.25 0 0 0 5.258 13H.75a.75.75 0 0 1-.75-.75Zm7.251 10.324.004-5.073-.002-2.253A2.25 2.25 0 0 0 5.003 2.5H1.5v9h3.757a3.75 3.75 0 0 1 1.994.574ZM8.755 4.75l-.004 7.322a3.752 3.752 0 0 1 1.992-.572H14.5v-9h-3.495a2.25 2.25 0 0 0-2.25 2.25Z',
+};
+
+function oct(name, cls, size) {
+    const w = size || 16;
+    const c = cls ? ' ' + cls : '';
+    return `<svg class="octicon octicon-${name}${c}" width="${w}" height="${w}" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="${OCT[name]}"></path></svg>`;
+}
+
+const GH_MONO = 'ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace';
+const GH_UI = '-apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif';
+
+/* ---------- Shadow DOM 内静态样式（真实 Primer 组件类） ---------- */
+const PREVIEW_CSS = `
+    .ghs {
+        font-family: ${GH_UI};
+        font-size: 14px;
+        line-height: 1.5;
+        color: var(--fgColor-default);
+        background: var(--bgColor-default);
+        min-width: 640px;
+    }
+    .ghs svg { vertical-align: text-bottom; }
+    .ghs a { color: var(--fgColor-accent); text-decoration: none; }
+    .ghs a:hover { text-decoration: underline; }
+    .ghs .Link--primary { color: var(--fgColor-default); }
+    .ghs .Link--primary:hover { color: var(--fgColor-accent); text-decoration: none; }
+
+    /* ── GitHub 布局工具类（Primer utilities 子集） ── */
+    .d-flex { display: flex; } .flex-1 { flex: 1 1 auto; } .flex-auto { flex: auto; }
+    .flex-column { flex-direction: column; } .flex-wrap { flex-wrap: wrap; }
+    .flex-md-row { flex-direction: row; }
+    .flex-shrink-0 { flex-shrink: 0; } .flex-items-center { align-items: center; }
+    .flex-items-start { align-items: flex-start; } .flex-items-baseline { align-items: baseline; }
+    .flex-justify-between { justify-content: space-between; } .flex-justify-end { justify-content: flex-end; }
+    .flex-justify-center { justify-content: center; }
+    .text-small { font-size: 12px !important; } .text-bold { font-weight: 600 !important; }
+    .text-normal { font-weight: 400 !important; } .text-mono { font-family: ${GH_MONO} !important; }
+    .text-right { text-align: right; } .no-wrap { white-space: nowrap; }
+    .wb-break-all { word-break: break-all; }
+    .overflow-hidden { overflow: hidden; } .v-align-middle { vertical-align: middle; }
+    .mr-1 { margin-right: 4px !important; } .mr-2 { margin-right: 8px !important; } .mr-3 { margin-right: 16px !important; }
+    .ml-1 { margin-left: 4px !important; } .ml-2 { margin-left: 8px !important; } .ml-3 { margin-left: 16px !important; }
+    .ml-auto { margin-left: auto !important; } .mr-auto { margin-right: auto !important; }
+    .mt-1 { margin-top: 4px !important; } .mt-2 { margin-top: 8px !important; } .mt-3 { margin-top: 16px !important; }
+    .mb-1 { margin-bottom: 4px !important; } .mb-2 { margin-bottom: 8px !important; } .mb-3 { margin-bottom: 16px !important; }
+    .mx-2 { margin-left: 8px !important; margin-right: 8px !important; }
+    .px-1 { padding-left: 4px !important; padding-right: 4px !important; }
+    .px-2 { padding-left: 8px !important; padding-right: 8px !important; }
+    .px-3 { padding-left: 16px !important; padding-right: 16px !important; }
+    .py-1 { padding-top: 4px !important; padding-bottom: 4px !important; }
+    .py-2 { padding-top: 8px !important; padding-bottom: 8px !important; }
+    .p-0 { padding: 0 !important; } .p-2 { padding: 8px !important; } .p-3 { padding: 16px !important; }
+    .position-relative { position: relative; }
+    .color-fg-default { color: var(--fgColor-default) !important; }
+    .color-fg-muted { color: var(--fgColor-muted) !important; }
+    .color-fg-subtle { color: var(--fgColor-subtle) !important; }
+    .color-fg-accent { color: var(--fgColor-accent) !important; }
+    .color-fg-success { color: var(--fgColor-success) !important; }
+    .color-fg-danger { color: var(--fgColor-danger) !important; }
+    .color-fg-done { color: var(--fgColor-done) !important; }
+    .color-fg-attention { color: var(--fgColor-attention) !important; }
+    .color-fg-onEmphasis { color: var(--fgColor-onEmphasis) !important; }
+
+    /* UA reset：Shadow DOM 不继承主文档 reset，<ul>/<ol> 自带 40px 缩进与外边距 */
+    .ghs ul, .ghs ol { margin: 0; padding: 0; list-style: none; }
+
+    /* ── 全局 Header（经典 Primer .Header + GitHub 全局导航） ── */
+    .ghs .Header {
+        display: flex; align-items: center; gap: 12px;
+        height: 60px; padding: 0 24px;
+        background: var(--header-bgColor);
+        color: var(--header-fgColor-default);
+        border-bottom: 1px solid var(--header-borderColor-divider, transparent);
+        flex-shrink: 0;
+    }
+    .ghs .Header-link { color: var(--header-fgColor-logo); display: inline-flex; }
+    .ghs .Header-logo { color: var(--header-fgColor-logo); display: inline-flex; margin-right: 6px; }
+    .ghs .Header-item { display: flex; align-items: center; }
+    .ghs .Header-search {
+        display: flex; align-items: center; gap: 8px;
+        width: min(400px, 100%);
+        height: 32px; padding: 0 12px;
+        border-radius: 100px;
+        background: var(--headerSearch-bgColor, rgba(255,255,255,.08));
+        border: 1px solid var(--headerSearch-borderColor, transparent);
+        color: var(--header-fgColor-default);
+        opacity: .92;
+    }
+    .ghs .Header-search .ph { opacity: .8; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .ghs .Header-search .divider {
+        width: 1px; height: 20px; flex-shrink: 0;
+        background: currentColor; opacity: .25;
+    }
+    .ghs .Header-search .scope {
+        font-weight: 500; white-space: nowrap; flex-shrink: 0;
+    }
+    .ghs .Header-search kbd {
+        margin-left: auto; font-size: 11px; font-family: ${GH_MONO};
+        border: 1px solid color-mix(in srgb, currentColor 35%, transparent);
+        border-radius: 5px; padding: 0 5px;
+        color: var(--header-fgColor-default);
+    }
+    .ghs .Header-actions { display: flex; align-items: center; gap: 14px; margin-left: auto; }
+    .ghs .Header-actions .icon-link { color: var(--header-fgColor-default); opacity: .9; display: inline-flex; }
+    .ghs .avatar-mock {
+        width: 20px; height: 20px; border-radius: 50%;
+        background: var(--header-fgColor-logo);
+        font-size: 10px; font-weight: 600; line-height: 20px; text-align: center;
+        color: var(--header-bgColor); user-select: none;
+    }
+
+    /* ── 仓库本地栏（面包屑 + 操作 + UnderlineNav） ── */
+    .ghs .local {
+        background: var(--bgColor-default);
+        border-bottom: 1px solid var(--borderColor-muted);
+        padding: 14px 24px 0;
+    }
+    .ghs .local .inner { max-width: 980px; margin: 0 auto; }
+    .ghs .breadcrumb-row { display: flex; align-items: center; gap: 6px; }
+    .ghs .breadcrumb-row .repo-name { font-weight: 600; }
+    .ghs .breadcrumb-row .actions { display: flex; align-items: center; gap: 8px; margin-left: auto; }
+
+    /* ── 按钮（Primer .btn 系，含语义变体） ── */
+    .ghs .btn {
+        display: inline-flex; align-items: center; gap: 6px;
+        padding: 5px 12px; font-size: 14px; font-weight: 500; line-height: 20px;
+        border-radius: 6px; border: 1px solid transparent; cursor: pointer;
+        background: var(--button-default-bgColor-rest, var(--bgColor-muted));
+        border-color: var(--button-default-borderColor-rest, var(--borderColor-default));
+        color: var(--button-default-fgColor-rest, var(--fgColor-default));
+        transition: background-color .1s ease;
+        white-space: nowrap;
+    }
+    .ghs .btn:hover {
+        background: var(--button-default-bgColor-hover, var(--bgColor-muted));
+        border-color: var(--button-default-borderColor-hover, var(--borderColor-muted));
+        text-decoration: none;
+    }
+    .ghs .btn .btn-octicon { color: var(--fgColor-muted); }
+    .ghs .btn-sm { padding: 3px 10px; font-size: 12px; line-height: 18px; }
+    .ghs .btn-static { pointer-events: none; }
+    .ghs .btn-primary {
+        background: var(--button-primary-bgColor-rest, var(--bgColor-accent-emphasis));
+        border-color: var(--button-primary-borderColor-rest, var(--bgColor-accent-emphasis));
+        color: var(--button-primary-fgColor-rest, var(--fgColor-onEmphasis));
+    }
+    .ghs .btn-primary:hover {
+        background: var(--button-primary-bgColor-hover, var(--bgColor-accent-emphasis));
+        filter: brightness(.92);
+    }
+    .ghs .btn-primary .btn-octicon { color: var(--button-primary-fgColor-rest, var(--fgColor-onEmphasis)); }
+
+    /* ── UnderlineNav（仓库页签） ── */
+    .ghs .UnderlineNav {
+        display: flex; align-items: flex-end; justify-content: space-between;
+        margin-top: 12px;
+        box-shadow: inset 0 -1px 0 var(--borderColor-muted);
+    }
+    .ghs .UnderlineNav-body { display: flex; gap: 2px; overflow-x: auto; }
+    .ghs .UnderlineNav-item {
+        display: inline-flex; align-items: center; gap: 6px;
+        padding: 8px 10px; margin-bottom: -1px;
+        font-size: 14px; line-height: 24px; color: var(--fgColor-muted);
+        border-bottom: 2px solid transparent; border-radius: 6px 6px 0 0;
+        white-space: nowrap;
+    }
+    .ghs .UnderlineNav-item:hover { color: var(--fgColor-default); text-decoration: none; }
+    .ghs .UnderlineNav-item.selected { color: var(--fgColor-default); border-bottom-color: var(--fgColor-default); font-weight: 500; }
+    .ghs .UnderlineNav-actions { display: flex; align-items: center; gap: 8px; padding-bottom: 4px; margin-left: 12px; }
+
+    /* ── Counter / Label / 徽章 ── */
+    .ghs .Counter {
+        display: inline-block; min-width: 18px; padding: 0 6px;
+        font-size: 12px; font-weight: 500; line-height: 18px; text-align: center;
+        border-radius: 20px; background: var(--bgColor-neutral-muted);
+        color: var(--fgColor-muted);
+    }
+    .ghs .Label {
+        display: inline-block; padding: 0 8px; font-size: 12px; font-weight: 500;
+        line-height: 20px; border-radius: 100px; border: 1px solid transparent;
+    }
+    .ghs .Label--secondary { color: var(--fgColor-muted); border-color: var(--borderColor-default); }
+    .ghs .Label--success { color: var(--fgColor-success); background: var(--bgColor-success-muted); border-color: var(--borderColor-success-emphasis, transparent); }
+    .ghs .Label--danger { color: var(--fgColor-danger); background: var(--bgColor-danger-muted); border-color: var(--borderColor-danger-emphasis, transparent); }
+    .ghs .Label--accent { color: var(--fgColor-accent); background: var(--bgColor-accent-muted); border-color: var(--borderColor-accent-emphasis, transparent); }
+    .ghs .Label--done { color: var(--fgColor-done); background: var(--bgColor-done-muted); border-color: transparent; }
+    .ghs .Label--attention { color: var(--fgColor-attention); background: var(--bgColor-attention-muted); border-color: transparent; }
+    .ghs .Label--neutral { color: var(--fgColor-muted); background: var(--bgColor-neutral-muted); }
+
+    /* ── Release 资产平台图标色（与主脚本 PLATFORM_COLORS 对齐，固定常量非主题 token） ──
+       .ghs .octicon.ri.ri-* = (0,4,0)，压过 .ghs .Box-row .octicon (0,3,0) 的 muted 色 */
+    .ghs .octicon.ri { height: 1lh; }
+    .ghs .octicon.ri.ri-windows { color: #0078d4; }
+    .ghs .octicon.ri.ri-mac     { color: #8e8e93; }
+    .ghs .octicon.ri.ri-linux   { color: #f5803e; }
+    .ghs .octicon.ri.ri-android { color: #3ddc84; }
+    .ghs .octicon.ri.ri-ios     { color: #5e5ce6; }
+
+    /* ── Box 家族 ── */
+    .ghs .Box { border: 1px solid var(--borderColor-default); border-radius: 6px; background: var(--bgColor-default); }
+    .ghs .Box--condensed { border-radius: 0; border-left: 0; border-right: 0; }
+    /* Box--condensed 作为 release Box 的收尾段：与主体齐平（无侧边距/无边距），补回底部圆角 */
+    .ghs .Box > .Box--condensed:last-child { border-bottom: 0; border-radius: 0 0 6px 6px; }
+    .ghs .Box > .Box--condensed:last-child .Box-header { border-radius: 0; }
+    .ghs .Box--condensed .Box-row { padding: 8px 8px; }
+    .ghs .Box-header { display: flex; align-items: center; padding: 10px 16px; background: var(--bgColor-muted); border-bottom: 1px solid var(--borderColor-muted); border-radius: 6px 6px 0 0; }
+    .ghs .Box-header:first-child, .ghs .Box-body:first-child { border-radius: 6px 6px 0 0; }
+    .ghs .Box-title { font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+    .ghs .Box-body { padding: 16px; background: var(--bgColor-default); }
+    .ghs .Box-row { display: flex; align-items: center; padding: 8px 16px; list-style: none; border-top: 1px solid var(--borderColor-muted); transition: background-color .15s ease, box-shadow .15s ease; }
+    .ghs .Box-row:first-child { border-top: 0; }
+    /* 原生 hover：新版仓库文件树非 .Box-row，主脚本增强不会命中文件列表 */
+    .ghs .Box-row:hover { background: var(--bgColor-muted); }
+    /* 主脚本增强仅作用于仍以 .Box-row 渲染的列表（Releases 资产行等） */
+    .ghs .assets-list .Box-row:hover {
+        background: var(--ghb-boxrow-hover-bg, var(--bgColor-accent-muted));
+        box-shadow: inset 4px 0 0 var(--ghb-accent-bar, var(--fgColor-accent));
+    }
+    .ghs .Box-row .octicon { color: var(--fgColor-muted); flex-shrink: 0; }
+
+    /* ── Truncate / 行内元素 ── */
+    .ghs .Truncate { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; }
+    .ghs .Truncate > .Truncate-text { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .ghs kbd { font-family: ${GH_MONO}; font-size: 11px; padding: 2px 5px; border-radius: 5px; border: 1px solid var(--borderColor-default); color: var(--fgColor-muted); }
+
+    /* ── 文件浏览列表（仓库根 / 列表流） ── */
+    .ghs .file-list-name { flex: 1 1 340px; min-width: 0; display: flex; align-items: center; gap: 8px; }
+    .ghs .file-list-msg { flex: 1 1 320px; min-width: 0; display: flex; align-items: center; gap: 6px; color: var(--fgColor-muted); font-size: 12px; }
+    .ghs .file-list-date { flex: 0 0 100px; text-align: right; font-size: 12px; color: var(--fgColor-muted); }
+    .ghs .mini-avatar {
+        width: 16px; height: 16px; border-radius: 50%; flex-shrink: 0;
+        background: var(--bgColor-emphasis);
+        box-shadow: 0 0 0 1px var(--avatar-borderColor);
+    }
+
+    /* ── 代码 / Blob ── */
+    .ghs .blob-wrapper { overflow-x: auto; }
+    .ghs .blob-code-table { width: 100%; border-collapse: collapse; font-family: ${GH_MONO}; font-size: 12.5px; line-height: 1.55; }
+    .ghs .blob-code-table td { padding: 0; vertical-align: top; }
+    .ghs .blob-num {
+        width: 40px; min-width: 40px; padding: 0 14px 0 0; text-align: right;
+        color: var(--fgColor-subtle); user-select: none; font-size: 12.5px;
+        border-right: 1px solid var(--borderColor-muted); background: var(--bgColor-default);
+    }
+    .ghs .blob-code-inner { padding-left: 16px; color: var(--fgColor-default); white-space: pre; background: var(--bgColor-default); }
+    .ghs .highlight { background: var(--bgColor-default); }
+    .ghs .file-code-bg { background: var(--bgColor-default); }
+    .ghs code { font-family: ${GH_MONO}; }
+
+    /* prettylights 语法色（引擎输出 --color-prettylights-syntax-*） */
+    .ghs .pl-c { color: var(--color-prettylights-syntax-comment); }
+    .ghs .pl-c1 { color: var(--color-prettylights-syntax-constant); }
+    .ghs .pl-en { color: var(--color-prettylights-syntax-entity); }
+    .ghs .pl-ent { color: var(--color-prettylights-syntax-entity-tag); }
+    .ghs .pl-k { color: var(--color-prettylights-syntax-keyword); }
+    .ghs .pl-s { color: var(--color-prettylights-syntax-string); }
+    .ghs .pl-smi { color: var(--color-prettylights-syntax-storage-modifier-import, var(--fgColor-default)); }
+    .ghs .pl-v { color: var(--color-prettylights-syntax-variable); }
+    .ghs .pl-pds { color: var(--color-prettylights-syntax-string); }
+
+    /* ── Diff（GitHub 真实结构：blob-num × 2 + blob-code，符号在代码单元格内） ── */
+    .ghs .diff-table { width: 100%; border-collapse: collapse; font-family: ${GH_MONO}; font-size: 12px; line-height: 20px; tab-size: 4; }
+    .ghs .diff-table td { padding: 0 10px 0 0; vertical-align: top; white-space: pre; }
+    .ghs .diff-table .blob-num {
+        width: 1%; min-width: 44px; text-align: right;
+        color: var(--fgColor-subtle); user-select: none;
+        border-right: 1px solid var(--borderColor-muted);
+    }
+    .ghs .blob-num-deletion { background: var(--bgColor-danger-muted); color: var(--fgColor-danger); }
+    .ghs .blob-num-addition { background: var(--bgColor-success-muted); color: var(--fgColor-success); }
+    .ghs .blob-code-deletion { background: var(--bgColor-danger-muted); }
+    .ghs .blob-code-addition { background: var(--bgColor-success-muted); }
+    .ghs .blob-code-hunk {
+        padding: 4px 10px; font-size: 12px;
+        color: var(--fgColor-accent); background: var(--bgColor-accent-muted);
+        white-space: pre;
+    }
+    .ghs .blob-code-inner { white-space: pre; }
+
+    /* ── 页面内容容器 ── */
+    .ghs .gh-content { padding: 24px; background: var(--bgColor-default); }
+    .ghs .gh-content .inner { max-width: 980px; margin: 0 auto; }
+    .ghs .page-title { font-size: 20px; font-weight: 600; color: var(--fgColor-default); line-height: 1.4; }
+
+    /* ── README（markdown-body 子集） ── */
+    .ghs .readme { font-size: 14px; line-height: 1.6; }
+    .ghs .readme h2 {
+        font-size: 20px; font-weight: 600; line-height: 1.4;
+        padding-bottom: 8px; margin: 16px 0 12px;
+        border-bottom: 1px solid var(--borderColor-muted);
+        color: var(--fgColor-default);
+    }
+    .ghs .readme h2:first-child { margin-top: 0; }
+    .ghs .readme p { margin: 0 0 12px; }
+    .ghs .readme ul { margin: 0 0 12px; padding-left: 28px; list-style: disc; }
+    .ghs .readme li { margin: 4px 0; }
+    .ghs .readme li::marker { color: var(--fgColor-muted); }
+    .ghs .readme code {
+        font-family: ${GH_MONO}; font-size: 85%;
+        padding: 2px 6px; border-radius: 6px;
+        background: var(--bgColor-neutral-muted); color: var(--fgColor-default);
+    }
+    .ghs .readme blockquote {
+        margin: 0 0 12px; padding: 0 12px;
+        border-left: 3px solid var(--borderColor-default);
+        color: var(--fgColor-muted);
+    }
+
+    /* Box-row 悬停增强演示保留原生分隔线（与主脚本一致） */
+    .ghs .Box-row { border-radius: 0; }
+`;
+
+/* ---------- Shadow DOM 生命周期 ---------- */
+let pvShadow = null;   // ShadowRoot
+let pvRootEl = null;   // .ghs 场景容器
+let pvVarsEl = null;   // <style> 变量作用域
+
+function ensurePreview() {
+    const host = document.getElementById('device');
+    if (!host) return;
+    if (!host.shadowRoot) {
+        const shadow = host.attachShadow({ mode: 'open' });
+        const s1 = document.createElement('style');
+        s1.textContent = PREVIEW_CSS;
+        shadow.appendChild(s1);
+        const s2 = document.createElement('style');
+        s2.id = 'ghs-vars';
+        shadow.appendChild(s2);
+        const root = document.createElement('div');
+        root.className = 'ghs';
+        shadow.appendChild(root);
+        pvShadow = shadow; pvRootEl = root; pvVarsEl = s2;
+    }
+}
+
+/* ---------- 全局 Header（真实类名 .Header / .Header-item / .Header-search） ---------- */
+function ghHeader() {
+    return `
+<header class="Header Header--dark" role="banner">
+    <div class="Header-item">
+        <a class="Header-logo" href="#" aria-label="Homepage" title="GitHub.com">${oct('mark', '', 32)}</a>
+    </div>
+    <div class="Header-item flex-1">
+        <div class="Header-search">
+            <span>${oct('search', '', 16)}</span>
+            <span class="ph">Search or jump to…</span>
+            <span class="divider"></span>
+            <span class="scope">This repository</span>
+            <kbd>/</kbd>
+        </div>
+    </div>
+    <div class="Header-actions">
+        <span class="icon-link">${oct('bell', '', 16)}</span>
+        <span class="icon-link">${oct('plus', '', 16)}</span>
+        <span class="avatar-mock" title="cafekai">CK</span>
+    </div>
+</header>`;
+}
+
+/* ---------- 仓库本地栏：面包屑 + Star/Fork/Watch ---------- */
+function repoBreadcrumbRow(extraActions) {
+    return `
+    <div class="breadcrumb-row">
+        ${oct('repo', 'color-fg-muted mr-1')}
+        <a class="Link--primary" href="#">cafekai</a>
+        <span class="color-fg-muted">/</span>
+        <a class="Link--primary repo-name" href="#">GithubTheme</a>
+        <span class="Label Label--secondary ml-2">Public</span>
+        <div class="actions">
+            <span class="btn btn-sm btn-static">${oct('eye')}<span class="btn-octicon-text">Watch</span></span>
+            <span class="btn btn-sm btn-static">${oct('star')} Star <span class="Counter ml-1">12.4k</span></span>
+            <span class="btn btn-sm btn-static">${oct('fork')} Fork <span class="Counter ml-1">2.1k</span></span>
+            ${extraActions || ''}
+        </div>
+    </div>`;
+}
+
+/* ---------- UnderlineNav：真实 .UnderlineNav / .UnderlineNav-item / .selected ---------- */
+function navRow(items, selected, actionsHtml) {
+    const body = items.map(it => `
+        <a class="UnderlineNav-item${it.id === selected ? ' selected' : ''}" role="tab" aria-selected="${it.id === selected}" href="#">
+            ${it.icon ? oct(it.icon) : ''}${it.label}
+            ${it.counter != null ? `<span class="Counter">${it.counter}</span>` : ''}
+        </a>`).join('');
+    return `
+    <div class="UnderlineNav" aria-label="Repository">
+        <nav class="UnderlineNav-body" role="tablist" aria-label="Repository">
+            ${body}
+        </nav>
+        <div class="UnderlineNav-actions">
+            ${actionsHtml || ''}
+        </div>
+    </div>`;
+}
+
+/* ---------- 各场景内容 ---------- */
+
+/* ① 仓库根 —— 文件列表流（真实 Box/Box-row/octicon 目录图标） */
+function buildRepoTab() {
+    const rows = [
+        { dir: true,  name: 'theme-studio',  msg: 'chore: 高保真复刻预览（Primer DOM + 引擎 402 变量）', date: '2 hours ago' },
+        { dir: true,  name: 'docs',           msg: 'docs: 重写实现思路与技术路线文档', date: 'yesterday' },
+        { dir: false, name: 'GithubTheme.js', msg: 'feat: 新增 Release 分组排序（同系统聚拢 + 图标同色）', date: '2 days ago' },
+        { dir: false, name: 'README.md',      msg: 'docs: 新增 README（主题列表、快捷键）', date: '2 days ago' },
+        { dir: false, name: 'MAP.md',         msg: 'docs: 新增代码地图（模块划分与数据流）', date: '2 days ago' },
+        { dir: false, name: 'LICENSE',        msg: 'chore: MIT license', date: 'last week' },
+    ].map(r => `
+        <li class="Box-row d-flex flex-items-center">
+            <span class="file-list-name">
+                ${oct(r.dir ? 'dir' : 'file', r.dir ? 'color-fg-accent mr-2' : 'color-fg-muted mr-2')}
+                <a class="Link--primary text-bold wb-break-all" href="#">${r.name}</a>
+            </span>
+            <span class="file-list-msg Truncate">
+                <span class="mini-avatar" title="cafekai"></span>
+                <span class="Truncate-text">${r.msg}</span>
+            </span>
+            <span class="file-list-date no-wrap">${r.date}</span>
+        </li>`).join('');
+
+    return `
+${ghHeader()}
+<div class="local">
+    <div class="inner">
+        ${repoBreadcrumbRow()}
+        ${navRow(
+            [
+                { id: 'code', icon: 'code', label: 'Code' },
+                { id: 'issues', icon: 'issue', label: 'Issues', counter: 23 },
+                { id: 'prs', icon: 'pr', label: 'Pull requests', counter: 6 },
+                { id: 'releases', icon: 'tag', label: 'Releases', counter: 2 },
+            ],
+            'code',
+            `<span class="btn btn-sm btn-static">${oct('branch')} main ${oct('chevron')}</span>`
+        )}
+    </div>
+</div>
+<div class="gh-content">
+    <div class="inner">
+        <div class="Box">
+            <div class="Box-header p-2">
+                <div class="d-flex flex-1 flex-items-center px-2">
+                    <span class="text-bold">Folders and files</span>
+                    <span class="color-fg-muted text-small ml-2">Name</span>
+                    <span class="color-fg-muted text-small ml-auto">Last commit message</span>
+                    <span class="color-fg-muted text-small ml-3" style="width:100px;text-align:right">Last commit date</span>
+                </div>
+            </div>
+            <ul>
+                ${rows}
+            </ul>
+        </div>
+        <div class="Box mt-3">
+            <div class="Box-header">
+                <h3 class="Box-title">${oct('book', 'color-fg-muted')} README.md</h3>
+            </div>
+            <div class="Box-body readme">
+                <h2>✨ GithubTheme</h2>
+                <p>
+                    一个为 <b>GitHub.com</b> 换肤的用户脚本 —— 18 个语义 Token 实时驱动
+                    <a href="#">402 个 Primer CSS 变量</a>，覆盖仓库、代码、Diff、Releases 全场景。
+                </p>
+                <ul>
+                    <li>背景 / 前景 / 语义色 / 组件色四层结构，<code>ghGenVars()</code> 一键生成</li>
+                    <li>Header、按钮、Label、Box-row 悬停增强全部跟随主题</li>
+                    <li>支持 <code>bfcache</code> 恢复与 <code>!important</code> 存活策略</li>
+                </ul>
+                <blockquote>
+                    提示：在左侧编辑任意 Token，本 README 区域同样实时反映链接色、代码底色与标题分隔线。
+                </blockquote>
+            </div>
+        </div>
+    </div>
+</div>`;
+}
+
+/* ② 代码 / Blob 页（真实 blob-wrapper / blob-num / blob-code / pl-* 语法） */
+function buildCodeTab() {
+    /* 行结构：每行是 [cls, text] 片段数组（cls 为空 = 纯文本），一行渲染为一个 <tr> 内的多个 span */
+    const lines = [
+        [['pl-c', '// 语义 Token → 生成 402 个 Primer CSS 变量（与 GithubTheme.js 引擎同构）']],
+        [],
+        [['pl-k', 'export function '], ['pl-en', 'ghGenVars'], ['pl-smi', '(t: ThemeTokens) '], ['pl-k', '{']],
+        [['  '], ['pl-k', 'const '], ['pl-v', 'isDark'], [' = '], ['pl-v', 't'], ['pl-smi', '.type'], [' === \'dark\';']],
+        [['  '], ['pl-k', 'const '], ['pl-v', 'accentHover'], [' = '], ['pl-en', 'lightenOrDarken'], ['('], ['pl-v', 't'], ['pl-smi', '.bgDefault'], [', '], ['pl-v', 't'], ['pl-smi', '.accent'], [', 0.12);']],
+        [['  '], ['pl-k', 'const '], ['pl-v', 'accentMuted'], [' = '], ['pl-en', 'hexToRgba'], ['('], ['pl-v', 't'], ['pl-smi', '.accent'], [', 0.30);']],
+        [['  '], ['pl-k', 'const '], ['pl-v', 'headerBg'], [' = '], ['pl-v', 't'], ['pl-smi', '.headerBg'], [';  '], ['pl-c', '// 顶部导航栏 Token']],
+        [['  '], ['pl-k', 'return '], ['pl-smi', '{']],
+        [['    bgDefault: '], ['pl-v', 't'], ['pl-smi', '.bgDefault'], [',']],
+        [['    border: '], ['pl-v', 't'], ['pl-smi', '.border'], [',']],
+        [['    accent: '], ['pl-v', 'accentHover'], [',']],
+        [['  '], ['pl-smi', '};']],
+        [['pl-smi', '}']],
+        [],
+        [['pl-c', '// 悬停增强：.Box-row 左侧竖条跟随主题 accent']],
+        [['pl-k', 'if '], ['('], ['pl-v', 'enabled'], [') '], ['pl-en', 'applyBoxRow'], ['('], ['pl-v', 'accent'], ['pl-smi', '.hex'], [');']],
+    ];
+
+    const lineHtml = lines.map((frags, i) => {
+        const html = frags
+            .map(f => f.length === 1 ? ['', f[0]] : f)   // 单元素片段 = 纯文本
+            .map(([cls, txt]) => cls ? `<span class="${cls}">${escHtml(txt)}</span>` : escHtml(txt))
+            .join('');
+        return `
+        <tr>
+            <td class="blob-num" data-line-number="${i + 1}">${i + 1}</td>
+            <td class="blob-code-inner">${html}</td>
+        </tr>`;
+    }).join('');
+
+    return `
+${ghHeader()}
+<div class="local">
+    <div class="inner">
+        ${repoBreadcrumbRow()}
+        ${navRow(
+            [
+                { id: 'code', icon: 'code', label: 'Code' },
+                { id: 'issues', icon: 'issue', label: 'Issues', counter: 23 },
+                { id: 'prs', icon: 'pr', label: 'Pull requests', counter: 6 },
+                { id: 'releases', icon: 'tag', label: 'Releases', counter: 2 },
+            ],
+            'code',
+            `<span class="btn btn-sm btn-static">${oct('branch')} main ${oct('chevron')}</span>`
+        )}
+    </div>
+</div>
+<div class="gh-content">
+    <div class="inner">
+        <div class="Box">
+            <div class="Box-header d-flex flex-items-center">
+                <div class="d-flex flex-1 flex-items-center overflow-hidden">
+                    <span class="color-fg-muted">theme-studio</span>
+                    <span class="color-fg-muted mx-2">/</span>
+                    <a class="Link--primary text-bold" href="#">engine.ts</a>
+                    <span class="color-fg-muted text-small ml-2 no-wrap">on branch <b class="color-fg-default">trunk</b></span>
+                </div>
+                <span class="btn btn-sm btn-static">${oct('history')} History</span>
+                <span class="btn btn-sm btn-static ml-2">Raw</span>
+            </div>
+            <div class="Box-body p-0 blob-wrapper file-code-bg">
+                <table class="blob-code-table highlight">
+                    <tbody>${lineHtml}</tbody>
+                </table>
+            </div>
+        </div>
+        <div class="color-fg-muted text-small mt-2">
+            语法角色 → 语义 Token：注释 fgMuted · 关键字 danger · 字符串 success · 实体/函数 done · 常量/变量 accent
+        </div>
+    </div>
+</div>`;
+}
+
+/* ③ Releases 页 —— 发布资产按平台分组着色（真实 expanded_assets DOM 结构） */
+function buildReleasesTab() {
+    const PLATFORMS = [
+        { sys: 'windows', color: '#0078d4', files: [
+            ['GithubTheme-2.4.0-windows-x64.exe', '48.2 MB'],
+            ['GithubTheme-2.4.0-windows-arm64.exe', '44.1 MB'],
+        ]},
+        { sys: 'mac', color: '#8e8e93', files: [
+            ['GithubTheme-2.4.0-macos-universal.dmg', '52.1 MB'],
+        ]},
+        { sys: 'linux', color: '#f5803e', files: [
+            ['GithubTheme-2.4.0-linux-x86_64.AppImage', '44.6 MB'],
+            ['GithubTheme-2.4.0-linux-amd64.deb', '41.3 MB'],
+        ]},
+        { sys: 'android', color: '#3ddc84', files: [
+            ['GithubTheme-2.4.0-android-arm64.apk', '38.9 MB'],
+        ]},
+        { sys: 'ios', color: '#5e5ce6', files: [
+            ['GithubTheme-2.4.0-ios.ipa', '35.2 MB'],
+        ]},
+    ];
+    const assetRows = PLATFORMS.map(p => p.files.map(([name, size]) => `
+        <li class="Box-row d-flex flex-column flex-md-row">
+            <div class="d-flex flex-justify-start flex-items-center flex-1">
+                <span class="d-flex flex-items-start">
+                    ${oct('package', 'ri ri-' + p.sys + ' mr-2 flex-shrink-0')}
+                    <a class="wb-break-all Link--primary" href="#"><span class="text-bold">${name}</span></a>
+                </span>
+            </div>
+            <div class="d-flex flex-justify-end flex-items-center">
+                <span class="text-small color-fg-muted no-wrap mr-2">${size}</span>
+                <span class="btn btn-sm btn-static">${oct('download')} Download</span>
+            </div>
+        </li>`).join('')).join('');
+
+    return `
+${ghHeader()}
+<div class="local">
+    <div class="inner">
+        ${repoBreadcrumbRow()}
+        ${navRow(
+            [
+                { id: 'code', icon: 'code', label: 'Code' },
+                { id: 'issues', icon: 'issue', label: 'Issues', counter: 23 },
+                { id: 'prs', icon: 'pr', label: 'Pull requests', counter: 6 },
+                { id: 'releases', icon: 'tag', label: 'Releases', counter: 2 },
+            ],
+            'releases',
+            `<span class="btn btn-sm btn-primary btn-static">${oct('paper')} New release</span>`
+        )}
+    </div>
+</div>
+<div class="gh-content">
+    <div class="inner">
+        <div class="Box">
+            <div class="Box-header d-flex flex-items-center">
+                ${oct('tag', 'color-fg-muted mr-2')}
+                <a class="Link--primary text-bold" href="#">v2.4.0</a>
+                <span class="Label Label--success ml-2">Latest</span>
+                <span class="ml-auto color-fg-muted text-small no-wrap">released 3 days ago</span>
+            </div>
+            <div class="Box-body">
+                <div class="d-flex flex-items-center flex-wrap mb-2">
+                    <span class="Label Label--success mr-2">${oct('check', '', 12)} checks passed</span>
+                    <span class="Label Label--accent mr-2">enhancement</span>
+                    <span class="Label Label--done mr-2">preview</span>
+                    <span class="Label Label--attention mr-2">priority</span>
+                    <span class="Label Label--danger mr-2">regression</span>
+                    <span class="Label Label--neutral">v1.3.0.0</span>
+                </div>
+                <p class="text-small color-fg-default" style="margin:0">
+                    高保真静态复刻：真实 Primer DOM + <b>402</b> 个 CSS 变量由 18 个语义 Token 实时生成；
+                    资产按平台 <b>Windows / macOS / Linux / Android / iOS</b> 聚拢排序，
+                    同系统 <span class="octicon">${oct('package', '', 12)}</span> 图标同色、跨系统异色，悬停行有左侧竖条增强。
+                </p>
+            </div>
+            <div class="Box Box--condensed">
+                <div class="Box-header">
+                    <h3 class="Box-title">Assets <span class="Counter">7</span></h3>
+                    <span class="ml-auto color-fg-muted text-small">按系统分组排序 · 图标同系统同色</span>
+                </div>
+                <ul class="assets-list" data-view-component="true">
+                    ${assetRows}
+                </ul>
+            </div>
+        </div>
+        <div class="Box mt-3">
+            <ul>
+                <li class="Box-row d-flex flex-items-center">
+                    ${oct('tag', 'color-fg-muted mr-2')}
+                    <a class="Link--primary text-bold wb-break-all" href="#">v2.3.0</a>
+                    <span class="ml-auto color-fg-muted text-small no-wrap">2 weeks ago · 1,842 downloads</span>
+                </li>
+                <li class="Box-row d-flex flex-items-center">
+                    ${oct('tag', 'color-fg-muted mr-2')}
+                    <a class="Link--primary text-bold wb-break-all" href="#">v2.2.0</a>
+                    <span class="ml-auto color-fg-muted text-small no-wrap">1 month ago · 1,521 downloads</span>
+                </li>
+            </ul>
+        </div>
+    </div>
+</div>`;
+}
+
+/* ④ Diff（PR Files changed）—— GitHub 真实 unified diff：双列行号 + 代码单元格内嵌 +/− 符号 */
+function buildDiffTab() {
+    const rows = [
+        { t: 'ctx', on: 21, nn: 21, code: '  const btnHover = isDark ? lighten(accent) : darken(accent);' },
+        { t: 'del', on: 22,         code: '  const boxRowHover = accent;' },
+        { t: 'del', on: 23,         code: '  const boxRowBar = accent;' },
+        { t: 'add',         nn: 22, code: '  const boxRowHoverBg = isDark ? rgba(accent, 0.18) : rgba(accent, 0.10);' },
+        { t: 'add',         nn: 23, code: '  const boxRowBar = accent;   /* 左侧竖条 */' },
+        { t: 'add',         nn: 24, code: '  const divider = border;   // 行间保留原生分隔线' },
+        { t: 'ctx', on: 24, nn: 25, code: '  return buildCss(tokens, isDark);' },
+        { t: 'ctx', on: 25, nn: 26, code: '}' },
+    ].map(r => {
+        const numCls  = r.t === 'del' ? 'blob-num-deletion' : r.t === 'add' ? 'blob-num-addition' : '';
+        const codeCls = r.t === 'del' ? 'blob-code-deletion' : r.t === 'add' ? 'blob-code-addition' : '';
+        const sign = r.t === 'del' ? '-' : r.t === 'add' ? '+' : ' ';
+        const onTd = `<td class="blob-num ${numCls}" data-line-number="${r.on || ''}">${r.on || ''}</td>`;
+        const nnTd = `<td class="blob-num ${numCls}" data-line-number="${r.nn || ''}">${r.nn || ''}</td>`;
+        return `<tr>${onTd}${nnTd}<td class="blob-code ${codeCls}"><span class="blob-code-inner">${sign}  ${escHtml(r.code)}</span></td></tr>`;
+    }).join('');
+    const hunk1 = '<tr><td class="blob-num blob-num-expandable" colspan="2"></td><td colspan="2" class="blob-code blob-code-hunk">@@ -21,7 +21,11 @@ function ghGenVars(t) {</td></tr>';
+
+    return `
+${ghHeader()}
+<div class="local">
+    <div class="inner">
+        <div class="breadcrumb-row">
+            ${oct('pr', 'color-fg-success mr-1')}
+            <a class="Link--primary text-bold" href="#">Pull request #118</a>
+            <span class="Label Label--success ml-2">Open</span>
+            <span class="ml-auto color-fg-muted text-small no-wrap">cafekai merged 3 commits into trunk from feat/preview-replica</span>
+        </div>
+        <div class="mt-3 d-flex flex-items-center">
+            <h1 class="page-title">chore: 实时预览改为高保真 Primer 复刻</h1>
+        </div>
+        ${navRow(
+            [
+                { id: 'convo', label: 'Conversation', counter: 4 },
+                { id: 'commits', icon: 'commit', label: 'Commits', counter: 3 },
+                { id: 'checks', icon: 'check', label: 'Checks' },
+                { id: 'files', icon: 'file', label: 'Files changed', counter: 2 },
+            ],
+            'files',
+            ''
+        )}
+    </div>
+</div>
+<div class="gh-content">
+    <div class="inner">
+        <div class="Box">
+            <div class="Box-header d-flex flex-items-center">
+                ${oct('file', 'color-fg-muted mr-2')}
+                <a class="Link--primary text-bold" href="#">engine.ts</a>
+                <span class="ml-auto text-small no-wrap">
+                    <span class="color-fg-success">+6</span>
+                    <span class="color-fg-danger ml-1">-3</span>
+                </span>
+            </div>
+            <div class="Box-body p-0">
+                <table class="diff-table"><tbody>${hunk1}${rows}</tbody></table>
+            </div>
+        </div>
+        <div class="Box mt-3">
+            <div class="Box-header d-flex flex-items-center">
+                ${oct('file', 'color-fg-muted mr-2')}
+                <a class="Link--primary text-bold" href="#">styles.css</a>
+                <span class="ml-auto text-small no-wrap">
+                    <span class="color-fg-success">+12</span>
+                    <span class="color-fg-danger ml-1">-0</span>
+                </span>
+            </div>
+            <div class="Box-body p-0">
+                <table class="diff-table"><tbody>
+                    <tr><td class="blob-num blob-num-expandable" colspan="2"></td><td colspan="2" class="blob-code blob-code-hunk">@@ -41,4 +41,7 @@ .ghs .Box-row:hover {</td></tr>
+                    <tr><td class="blob-num" data-line-number="41">41</td><td class="blob-num" data-line-number="41">41</td><td class="blob-code"><span class="blob-code-inner"> .Box-row:hover {</span></td></tr>
+                    <tr><td class="blob-num blob-num-addition"></td><td class="blob-num blob-num-addition" data-line-number="42">42</td><td class="blob-code blob-code-addition"><span class="blob-code-inner">+  box-shadow: inset 4px 0 0 var(--ghb-accent-bar);</span></td></tr>
+                    <tr><td class="blob-num blob-num-addition"></td><td class="blob-num blob-num-addition" data-line-number="43">43</td><td class="blob-code blob-code-addition"><span class="blob-code-inner">+  background: var(--ghb-boxrow-hover-bg);</span></td></tr>
+                    <tr><td class="blob-num" data-line-number="42">42</td><td class="blob-num" data-line-number="44">44</td><td class="blob-code"><span class="blob-code-inner"> }</span></td></tr>
+                </tbody></table>
+            </div>
+        </div>
+        <div class="color-fg-muted text-small mt-2">
+            增/删行底色取 success / danger 语义色半透明；正文跟随 fg，行号 muted。
+        </div>
+    </div>
+</div>`;
+}
+
+function escHtml(s) {
+    return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+/* ---------- 渲染入口：引擎变量 scoped 到 .ghs + 场景切换 ---------- */
+function renderPreview() {
+    ensurePreview();
+    if (!pvRootEl || !pvVarsEl) return;
+    // 与主脚本完全同构的 402 变量（含 !important），作用域收窄到 .ghs
+    const css = ghGenVars({ ...state.tokens, type: state.type }).replace(':root', '.ghs');
+    pvVarsEl.textContent = css;
+    const tab = state.activeTab || 'repo';
+    const scene = tab === 'code' ? buildCodeTab()
+        : tab === 'releases' ? buildReleasesTab()
+        : tab === 'diff' ? buildDiffTab()
+        : buildRepoTab();
+    pvRootEl.innerHTML = scene;
+}
+/* ═══════════════════════════════════════════════════════════════
+ *  7. 输出代码生成（与 GithubTheme.js themes 块完全同构）
+ * ═══════════════════════════════════════════════════════════════ */
+function genCode() {
+    const t = state.tokens;
+    const keys = Object.keys(t);
+    const w = Math.max(...keys.map(k => k.length)) + 1;
+    const lines = keys.map(k => {
+        const v = normalize(String(t[k]).toLowerCase().trim()) || String(t[k]).trim();
+        return `    ${k.padEnd(w, ' ')}: '${v}',`;
+    });
+    const type = state.type;
+    const key = (state.key || 'my-theme').trim().replace(/['"]/g, '');
+    const name = (state.name || '🎨 My Theme').trim().replace(/'/g, '\\\'');
+    return `        // ── 你的新主题 ─ ${name}（GitHub Themes Studio 生成）──────────────
+        '${key}': {
+            name: '${name}',
+            type: '${type}',
+            tokens: {
+${lines.join('\n')}
+            }
+        },`;
+}
+
+function updateOutput() {
+    const code = genCode();
+    const pre = document.getElementById('code-output');
+    const empty = document.getElementById('code-empty');
+    pre.textContent = code;
+    pre.style.display = 'block';
+    empty.style.display = 'none';
+    const n = Object.keys(state.tokens).length;
+    document.getElementById('gen-status').textContent = `${n} tokens · ${state.type}`;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+ *  8. 调度与事件
+ * ═══════════════════════════════════════════════════════════════ */
+function scheduleUpdate() {
+    clearTimeout(timer);
+    timer = setTimeout(() => { renderPreview(); updateOutput(); refreshCA(); }, 60);
+}
+
+function refreshCA() {
+    const t = state.tokens;
+    const ratio = contrast(t.fgDefault, t.bgDefault);
+    const el = document.querySelector('.ca-badge[data-for="fgDefault-vs-bg"]');
+    // 用 fgDefault 行展示整体正文对比
+    if (el) {
+        const lv = caLevel(ratio);
+        el.className = 'ca-badge ' + lv.cls;
+        el.textContent = '正文 ' + lv.txt;
+        el.title = `fgDefault vs bgDefault 对比度 ${ratio.toFixed(2)} (AA 需 ≥4.5)`;
+    }
+    // fgOnEmphasis vs accent
+    const el2 = document.querySelector('.ca-badge[data-for="fgOnEmphasis-vs-accent"]');
+    if (el2) {
+        const r2 = contrast(t.fgOnEmphasis, t.accent);
+        const lv2 = caLevel(r2);
+        el2.className = 'ca-badge ' + lv2.cls;
+        el2.textContent = '按钮文字 ' + lv2.txt;
+        el2.title = `fgOnEmphasis vs accent 对比度 ${r2.toFixed(2)} (AA 需 ≥4.5)`;
+    }
+}
+
+function syncBaseSelect(key) {
+    const sel = document.getElementById('base-select');
+    if (sel) sel.value = (key && BASES[key] && !String(key).startsWith('blank')) ? key : '';
+}
+
+function setBase(name) {
+    const base = BASES[name];
+    if (!base) return;
+    state.tokens = { ...base.tokens };
+    state.key = base.key || '';
+    state.name = base.name;
+    state.type = base.type;
+    document.getElementById('theme-key').value = state.key;
+    document.getElementById('theme-name').value = state.name;
+    document.querySelectorAll('#type-seg button').forEach(b => {
+        b.classList.toggle('active', b.dataset.t === state.type);
+    });
+    syncBaseSelect(name);
+    buildEditor();
+    renderPreview();
+    updateOutput();
+    refreshCA();
+}
+
+function showToast(msg) {
+    const el = document.getElementById('toast');
+    el.textContent = msg;
+    el.classList.add('on');
+    clearTimeout(showToast._t);
+    showToast._t = setTimeout(() => el.classList.remove('on'), 2200);
+}
+
+/* 复制 */
+function copyText(text) {
+    if (navigator.clipboard && window.isSecureContext) {
+        return navigator.clipboard.writeText(text);
+    }
+    return new Promise((resolve, reject) => {
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.cssText = 'position:fixed;opacity:0';
+        document.body.appendChild(ta);
+        ta.select();
+        try { document.execCommand('copy'); resolve(); }
+        catch (e) { reject(e); }
+        finally { ta.remove(); }
+    });
+}
+
+/* 导出 JSON */
+function toJSON() {
+    return JSON.stringify({
+        generator: 'github-themes-studio',
+        version: '1.3.0.0',
+        key: (state.key || '').trim(),
+        name: state.name,
+        type: state.type,
+        tokens: state.tokens,
+    }, null, 2);
+}
+function download(filename, text, mime) {
+    const blob = new Blob([text], { type: mime || 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => { URL.revokeObjectURL(url); a.remove(); }, 400);
+}
+
+/* 导入：解析 .json / .gh-theme；也兼容直接粘贴主题 JS 对象片段 */
+function parseImport(text) {
+    const s = text.trim();
+    // JSON 直读
+    try {
+        const obj = JSON.parse(s);
+        if (obj && obj.tokens) {
+            return { key: obj.key || '', name: obj.name || '🎨 My Theme', type: obj.type === 'dark' ? 'dark' : 'light', tokens: obj.tokens };
+        }
+    } catch (e) { /* fallthrough */ }
+    // JS 对象：形如 { name, type, tokens: { ... } }，或 'key': { ... }
+    const src = s.replace(/^\s*'[^']*'\s*:\s*/, '');
+    try {
+        const fn = new Function('return (' + src + ');');
+        const obj = fn();
+        if (obj && obj.tokens) {
+            const m = s.match(/^\s*'([^']+)'\s*:/);
+            return { key: m ? m[1] : '', name: obj.name || '🎨 My Theme', type: obj.type === 'dark' ? 'dark' : 'light', tokens: obj.tokens };
+        }
+    } catch (e) { /* fallthrough */ }
+    return null;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+ *  9. 绑定 UI 事件
+ * ═══════════════════════════════════════════════════════════════ */
+function bindUI() {
+    // 类型分段
+    document.querySelectorAll('#type-seg button').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('#type-seg button').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            state.type = btn.dataset.t;
+            if (btn.dataset.t === 'light' && Object.values(state.tokens).every(v => v && isDark(v))) {
+                // 深色值直接切浅色会不可读：提示用但不强制
+            }
+            scheduleUpdate();
+        });
+    });
+
+    // key / name
+    document.getElementById('theme-key').addEventListener('input', e => {
+        state.key = e.target.value;
+        updateOutput();
+    });
+    document.getElementById('theme-name').addEventListener('input', e => {
+        state.name = e.target.value;
+        scheduleUpdate();
+    });
+
+    // 基底下拉（全量对齐 GithubTheme.js 内置主题库）
+    const baseSel = document.getElementById('base-select');
+    const lights = [], darks = [];
+    Object.entries(BASES).forEach(([k, b]) => {
+        if (k.startsWith('blank')) return;
+        (b.type === 'light' ? lights : darks).push([k, b.name]);
+    });
+    baseSel.innerHTML =
+        '<option value="">选择基底主题…</option>' +
+        `<optgroup label="☀️ 浅色 (${lights.length})">` + lights.map(([k, n]) => `<option value="${k}">${n}</option>`).join('') + '</optgroup>' +
+        `<optgroup label="🌙 深色 (${darks.length})">` + darks.map(([k, n]) => `<option value="${k}">${n}</option>`).join('') + '</optgroup>';
+    baseSel.addEventListener('change', () => {
+        if (!baseSel.value) return;
+        setBase(baseSel.value);
+        showToast(`已载入 ${BASES[baseSel.value].name}`);
+    });
+
+    // 空白基底
+    document.getElementById('btn-blank').addEventListener('click', () => {
+        setBase(state.type === 'light' ? 'blank-light' : 'blank-dark');
+        showToast('已清空为空白基底');
+    });
+
+    // 预览 tab
+    document.querySelectorAll('#preview-tabs .ptab').forEach(p => {
+        p.addEventListener('click', () => {
+            document.querySelectorAll('#preview-tabs .ptab').forEach(x => x.classList.remove('active'));
+            p.classList.add('active');
+            state.activeTab = p.dataset.tab;
+            renderPreview();
+        });
+    });
+
+    // 复制 / 下载 / 导出（顶栏 + 底栏）
+    const doCopy = () => {
+        copyText(genCode()).then(() => showToast('配置块已复制到剪贴板 ✓'));
+    };
+    document.getElementById('btn-copy').addEventListener('click', doCopy);
+    document.getElementById('btn-copy2').addEventListener('click', doCopy);
+
+    const doExport = () => {
+        download(`${(state.key || 'theme').trim() || 'theme'}.gh-theme.json`, toJSON(), 'application/json');
+        showToast('已导出 JSON');
+    };
+    document.getElementById('btn-export').addEventListener('click', doExport);
+    document.getElementById('btn-export2').addEventListener('click', doExport);
+
+    document.getElementById('btn-download').addEventListener('click', () => {
+        const code = `// GitHub Themes — 主题配置块（由 Studio 生成，粘贴进 GithubTheme.js themes 对象）\n` +
+            `// 配合 v1.3.0.0 使用：18 语义 Token → 自动生成全部 Primer CSS 变量\n\n` +
+            `const themes = {\n${genCode()}\n};\n`;
+        download(`${(state.key || 'theme').trim() || 'theme'}-theme.js`, code, 'text/javascript');
+        showToast('已下载 .js');
+    });
+
+    // 导入
+    const importInput = document.createElement('input');
+    importInput.type = 'file';
+    importInput.accept = '.json,.gh-theme,.gh-theme.json,application/json';
+    importInput.style.display = 'none';
+    document.body.appendChild(importInput);
+    document.getElementById('btn-import').addEventListener('click', () => importInput.click());
+    importInput.addEventListener('change', () => {
+        const file = importInput.files && importInput.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = () => {
+            const obj = parseImport(String(reader.result));
+            if (!obj) { showToast('无法解析文件'); return; }
+            state.tokens = { ...obj.tokens };
+            state.key = obj.key || '';
+            state.name = obj.name;
+            state.type = obj.type;
+            document.getElementById('theme-key').value = state.key;
+            document.getElementById('theme-name').value = state.name;
+            document.querySelectorAll('#type-seg button').forEach(b => b.classList.toggle('active', b.dataset.t === state.type));
+            syncBaseSelect(state.key);
+            buildEditor();
+            renderPreview(); updateOutput(); refreshCA();
+            showToast('导入成功 ✓');
+        };
+        reader.readAsText(file);
+        importInput.value = '';
+    });
+
+    // 拖拽导入
+    document.addEventListener('dragover', e => e.preventDefault());
+    document.addEventListener('drop', (e) => {
+        e.preventDefault();
+        const file = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = () => {
+            const obj = parseImport(String(reader.result));
+            if (!obj) { showToast('无法解析文件'); return; }
+            state.tokens = { ...obj.tokens };
+            state.key = obj.key || '';
+            state.name = obj.name;
+            state.type = obj.type;
+            document.getElementById('theme-key').value = state.key;
+            document.getElementById('theme-name').value = state.name;
+            document.querySelectorAll('#type-seg button').forEach(b => b.classList.toggle('active', b.dataset.t === state.type));
+            syncBaseSelect(state.key);
+            buildEditor();
+            renderPreview(); updateOutput(); refreshCA();
+            showToast('导入成功 ✓');
+        };
+        reader.readAsText(file);
+    });
+
+    // 快捷键
+    document.addEventListener('keydown', (e) => {
+        if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+            e.preventDefault();
+            download(`${(state.key || 'theme').trim() || 'theme'}.gh-theme.json`, toJSON(), 'application/json');
+            showToast('已保存 JSON');
+        }
+    });
+}
+
+/* ═══════════════════════════════════════════════════════════════
+ *  10. 初始化
+ * ═══════════════════════════════════════════════════════════════ */
+buildEditor();
+bindTokenEvents();
+bindUI();
+renderPreview();
+updateOutput();
+refreshCA();
+</script>
+</body>
+</html>
