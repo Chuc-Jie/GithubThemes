@@ -1,0 +1,203 @@
+- generic [active] [ref=e1]:
+  - banner [ref=e2]:
+    - generic [ref=e3]:
+      - generic [ref=e6]: GitHub Themes Studio
+      - generic [ref=e7]: 主题创作 · 实时预览 · 一键生成
+    - generic [ref=e8]: 适配 GithubTheme.js @v1.3.0.0 · 18 语义 Token
+    - button "导入" [ref=e9] [cursor=pointer]
+    - button "导出" [ref=e10] [cursor=pointer]
+    - button "复制配置块" [ref=e11] [cursor=pointer]
+    - button "下载 .js" [ref=e12] [cursor=pointer]
+  - generic [ref=e13]:
+    - complementary [ref=e14]:
+      - generic [ref=e15]:
+        - generic [ref=e16]:
+          - generic [ref=e17]:
+            - generic [ref=e18]: 主题 Key
+            - textbox "主题 Key" [ref=e19]:
+              - /placeholder: my-theme
+              - text: my-theme
+          - generic [ref=e20]:
+            - generic [ref=e21]: 类型
+            - generic [ref=e22]:
+              - button "浅" [ref=e23] [cursor=pointer]
+              - button "深" [ref=e24] [cursor=pointer]
+        - generic [ref=e26]:
+          - generic [ref=e27]: 显示名称（可含 emoji）
+          - textbox "显示名称（可含 emoji）" [ref=e28]: 🎨 My Theme
+        - generic [ref=e29]:
+          - button "◐ Nord Light" [ref=e30] [cursor=pointer]
+          - button "◑ 2026 Dark" [ref=e31] [cursor=pointer]
+          - button "＋ 空白" [ref=e32] [cursor=pointer]
+        - generic [ref=e33]:
+          - generic [ref=e34]:
+            - generic [ref=e35]:
+              - text: 背景层
+              - generic [ref=e36]: 页面 / 卡片 / 输入框 / 强调底
+            - generic [ref=e37]:
+              - textbox [ref=e39] [cursor=pointer]: "#eceff4"
+              - generic [ref=e40]: bgDefault
+              - textbox [ref=e42]: "#ECEFF4"
+            - generic [ref=e43]:
+              - textbox [ref=e45] [cursor=pointer]: "#e5e9f0"
+              - generic [ref=e46]: bgSubtle
+              - textbox [ref=e48]: "#E5E9F0"
+            - generic [ref=e49]:
+              - textbox [ref=e51] [cursor=pointer]: "#d8dee9"
+              - generic [ref=e52]: bgInset
+              - textbox [ref=e54]: "#D8DEE9"
+            - generic [ref=e55]:
+              - textbox [ref=e57] [cursor=pointer]: "#3b4252"
+              - generic [ref=e58]: bgEmphasis
+              - textbox [ref=e60]: "#3B4252"
+          - generic [ref=e61]:
+            - generic [ref=e62]:
+              - text: 前景文本
+              - generic [ref=e63]: 正文层级颜色
+            - generic [ref=e64]:
+              - textbox [ref=e66] [cursor=pointer]: "#2e3440"
+              - generic [ref=e67]: fgDefault
+              - textbox [ref=e69]: "#2E3440"
+              - generic "fgDefault vs bgDefault 对比度 10.84 (AA 需 ≥4.5)" [ref=e70]: 正文 AA 10.8
+            - generic [ref=e71]:
+              - textbox [ref=e73] [cursor=pointer]: "#4c566a"
+              - generic [ref=e74]: fgMuted
+              - textbox [ref=e76]: "#4C566A"
+            - generic [ref=e77]:
+              - textbox [ref=e79] [cursor=pointer]: "#616e87"
+              - generic [ref=e80]: fgSubtle
+              - textbox [ref=e82]: "#616E87"
+            - generic [ref=e83]:
+              - textbox [ref=e85] [cursor=pointer]: "#eceff4"
+              - generic [ref=e86]: fgOnEmphasis
+              - textbox [ref=e88]: "#ECEFF4"
+              - generic "fgOnEmphasis vs accent 对比度 5.46 (AA 需 ≥4.5)" [ref=e89]: 按钮文字 AA 5.5
+          - generic [ref=e90]:
+            - generic [ref=e91]:
+              - text: 语义色
+              - generic [ref=e92]: 按钮 / 链接 / 状态
+            - generic [ref=e93]:
+              - textbox [ref=e95] [cursor=pointer]: "#3b6290"
+              - generic [ref=e96]: accent
+              - textbox [ref=e98]: "#3B6290"
+            - generic [ref=e99]:
+              - textbox [ref=e101] [cursor=pointer]: "#4e7034"
+              - generic [ref=e102]: success
+              - textbox [ref=e104]: "#4E7034"
+            - generic [ref=e105]:
+              - textbox [ref=e107] [cursor=pointer]: "#9a4450"
+              - generic [ref=e108]: danger
+              - textbox [ref=e110]: "#9A4450"
+            - generic [ref=e111]:
+              - textbox [ref=e113] [cursor=pointer]: "#a04820"
+              - generic [ref=e114]: warning
+              - textbox [ref=e116]: "#A04820"
+            - generic [ref=e117]:
+              - textbox [ref=e119] [cursor=pointer]: "#b48ead"
+              - generic [ref=e120]: done
+              - textbox [ref=e122]: "#B48EAD"
+          - generic [ref=e123]:
+            - generic [ref=e124]:
+              - text: 组件色
+              - generic [ref=e125]: Header 与代码区
+            - generic [ref=e126]:
+              - textbox [ref=e128] [cursor=pointer]: "#3b4252"
+              - generic [ref=e129]: headerBg
+              - textbox [ref=e131]: "#3B4252"
+            - generic [ref=e132]:
+              - textbox [ref=e134] [cursor=pointer]: "#d8dee9"
+              - generic [ref=e135]: headerFg
+              - textbox [ref=e137]: "#D8DEE9"
+            - generic [ref=e138]:
+              - textbox [ref=e140] [cursor=pointer]: "#d8dee9"
+              - generic [ref=e141]: codeBg
+              - textbox [ref=e143]: "#D8DEE9"
+            - generic [ref=e144]:
+              - textbox [ref=e146] [cursor=pointer]: "#c8d0da"
+              - generic [ref=e147]: border
+              - textbox [ref=e149]: "#C8D0DA"
+            - generic [ref=e150]:
+              - textbox [ref=e152] [cursor=pointer]: "#5e81ac"
+              - generic [ref=e153]: link
+              - textbox [ref=e155]: "#5E81AC"
+        - generic [ref=e156]: 说明：背景层决定页面/卡片/输入框底色；前景文本是正文层级；语义色驱动按钮、链接与状态；组件色单列 Header 与代码区。修改任意色值，右侧预览实时刷新。
+    - main [ref=e157]:
+      - generic [ref=e158]:
+        - button "仓库列表" [ref=e159] [cursor=pointer]
+        - button "代码" [ref=e160] [cursor=pointer]
+        - button "Diff" [ref=e161] [cursor=pointer]
+      - generic [ref=e163]:
+        - generic [ref=e164]:
+          - generic [ref=e165]: GitHub Themes
+          - generic [ref=e168]: 搜索或跳转…
+          - generic [ref=e169]:
+            - generic [ref=e170] [cursor=pointer]: Pull requests
+            - generic [ref=e171] [cursor=pointer]: Issues
+            - generic [ref=e172] [cursor=pointer]: Releases
+        - generic [ref=e173]:
+          - generic [ref=e174]:
+            - generic [ref=e175]: user
+            - generic [ref=e176]: /
+            - generic [ref=e177]: awesome-project
+            - generic [ref=e178]: Public
+          - generic [ref=e179]:
+            - generic [ref=e180] [cursor=pointer]: Code
+            - generic [ref=e181] [cursor=pointer]: Issues
+            - generic [ref=e182] [cursor=pointer]: Pull requests
+            - generic [ref=e183] [cursor=pointer]: Releases
+          - generic [ref=e184]:
+            - button "Default" [ref=e185] [cursor=pointer]
+            - button "Primary" [ref=e186] [cursor=pointer]
+            - button "Outline" [ref=e187] [cursor=pointer]
+            - button "Danger" [ref=e188] [cursor=pointer]
+            - generic [ref=e189] [cursor=pointer]: 这是一个链接
+          - generic [ref=e190]:
+            - text: README.md ·
+            - generic [ref=e191]: Release v2.1.0 资产按系统分组示意，悬停可见左侧竖条（同主脚本增强效果）。
+          - generic [ref=e192]:
+            - generic [ref=e193]: ✓ checks passed
+            - generic [ref=e194]: enhancement
+            - generic [ref=e195]: bug
+            - generic [ref=e196]: feature
+            - generic [ref=e197]: v2.1.0
+          - generic [ref=e198]:
+            - generic [ref=e199]: Assets
+            - generic [ref=e200]:
+              - generic [ref=e204]: app-windows-x64.exe
+              - generic [ref=e205]: 48.2 MB
+              - generic [ref=e206] [cursor=pointer]: 下载
+            - generic [ref=e207]:
+              - generic [ref=e211]: app-macos-universal.dmg
+              - generic [ref=e212]: 52.1 MB
+              - generic [ref=e213] [cursor=pointer]: 下载
+            - generic [ref=e214]:
+              - generic [ref=e218]: app-macos-arm64.dmg
+              - generic [ref=e219]: 49.8 MB
+              - generic [ref=e220] [cursor=pointer]: 下载
+            - generic [ref=e221]:
+              - generic [ref=e225]: app-linux-x86_64.AppImage
+              - generic [ref=e226]: 44.6 MB
+              - generic [ref=e227] [cursor=pointer]: 下载
+            - generic [ref=e228]:
+              - generic [ref=e232]: app-linux-amd64.deb
+              - generic [ref=e233]: 41.3 MB
+              - generic [ref=e234] [cursor=pointer]: 下载
+            - generic [ref=e235]:
+              - generic [ref=e239]: app-android-arm64.apk
+              - generic [ref=e240]: 38.9 MB
+              - generic [ref=e241] [cursor=pointer]: 下载
+            - generic [ref=e242]:
+              - generic [ref=e246]: app-ios.ipa
+              - generic [ref=e247]: 35.2 MB
+              - generic [ref=e248] [cursor=pointer]: 下载
+        - generic [ref=e268]:
+          - generic [ref=e269]: 🎨 My Theme · 浅色
+          - generic [ref=e270]: GitHub Themes Studio 实时预览
+    - complementary [ref=e271]:
+      - generic [ref=e272]:
+        - generic [ref=e273]: 生成配置块
+        - generic [ref=e274]: 18 tokens · light
+      - generic [ref=e275]: "// ── 你的新主题 ─ 🎨 My Theme（GitHub Themes Studio 生成）────────────── 'my-theme': { name: '🎨 My Theme', type: 'light', tokens: { bgDefault : '#eceff4', bgSubtle : '#e5e9f0', bgInset : '#d8dee9', bgEmphasis : '#3b4252', fgDefault : '#2e3440', fgMuted : '#4c566a', fgSubtle : '#616e87', fgOnEmphasis : '#eceff4', accent : '#3b6290', success : '#4e7034', danger : '#9a4450', warning : '#a04820', done : '#b48ead', headerBg : '#3b4252', headerFg : '#d8dee9', codeBg : '#d8dee9', border : '#c8d0da', link : '#5e81ac', } },"
+      - generic [ref=e277]:
+        - button "复制" [ref=e278] [cursor=pointer]
+        - button "导出 JSON" [ref=e279] [cursor=pointer]

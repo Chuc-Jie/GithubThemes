@@ -1,0 +1,342 @@
+- generic [ref=e2]:
+  - generic [ref=e3]:
+    - link "Skip to content" [ref=e4] [cursor=pointer]:
+      - /url: "#start-of-content"
+    - banner [ref=e9]:
+      - heading "Navigation Menu" [level=2] [ref=e10]
+      - generic [ref=e11]:
+        - link "Homepage" [ref=e13] [cursor=pointer]:
+          - /url: /
+        - generic [ref=e16]:
+          - navigation "Global" [ref=e17]:
+            - list [ref=e18]:
+              - listitem [ref=e19]:
+                - button "Platform" [ref=e21] [cursor=pointer]
+              - listitem [ref=e24]:
+                - button "Solutions" [ref=e26] [cursor=pointer]
+              - listitem [ref=e29]:
+                - button "Resources" [ref=e31] [cursor=pointer]
+              - listitem [ref=e34]:
+                - button "Open Source" [ref=e36] [cursor=pointer]
+              - listitem [ref=e39]:
+                - button "Enterprise" [ref=e41] [cursor=pointer]
+              - listitem [ref=e44]:
+                - link "Pricing" [ref=e45] [cursor=pointer]:
+                  - /url: https://github.com/pricing
+          - generic [ref=e46]:
+            - button "Search or jump to, type / to search" [ref=e48] [cursor=pointer]
+            - link "Sign in" [ref=e55] [cursor=pointer]:
+              - /url: /login?return_to=https%3A%2F%2Fgithub.com%2Fcli%2Fcli%2Freleases%2Ftag%2Fv2.100.0
+            - link "Sign up" [ref=e58] [cursor=pointer]:
+              - /url: /signup?ref_cta=Sign+up&ref_loc=header+logged+out&ref_page=%2F%3Cuser-name%3E%2F%3Crepo-name%3E%2Freleases%2Fshow&source=header-repo&source_repo=cli%2Fcli
+            - button "Appearance settings" [ref=e61] [cursor=pointer]
+  - main [ref=e68]:
+    - generic [ref=e69]:
+      - generic [ref=e70]:
+        - generic [ref=e72]:
+          - link "cli" [ref=e76] [cursor=pointer]:
+            - /url: /cli
+          - generic [ref=e77]: /
+          - strong [ref=e78]:
+            - link "cli" [ref=e79] [cursor=pointer]:
+              - /url: /cli/cli
+          - generic [ref=e80]: Public
+        - generic [ref=e81]:
+          - list:
+            - listitem [ref=e82]:
+              - link "You must be signed in to change notification settings" [ref=e83] [cursor=pointer]:
+                - /url: /login?return_to=%2Fcli%2Fcli
+                - text: Notifications
+            - listitem [ref=e86]:
+              - link "Fork 9k" [ref=e87] [cursor=pointer]:
+                - /url: /login?return_to=%2Fcli%2Fcli
+                - text: Fork
+                - generic "8,974" [ref=e90]: 9k
+            - listitem [ref=e91]:
+              - link "You must be signed in to star a repository" [ref=e93] [cursor=pointer]:
+                - /url: /login?return_to=%2Fcli%2Fcli
+                - text: Star
+                - generic "46162 users starred this repository" [ref=e96]: 46.2k
+      - navigation "Repository" [ref=e97]:
+        - list [ref=e98]:
+          - listitem [ref=e99]:
+            - link "Code" [ref=e100] [cursor=pointer]:
+              - /url: /cli/cli/tree/v2.100.0
+          - listitem [ref=e104]:
+            - link "Issues 1k" [ref=e105] [cursor=pointer]:
+              - /url: /cli/cli/issues
+              - generic [ref=e109]: Issues
+              - generic "1,012" [ref=e110]: 1k
+          - listitem [ref=e111]:
+            - link "Pull requests 64" [ref=e112] [cursor=pointer]:
+              - /url: /cli/cli/pulls
+              - generic [ref=e115]: Pull requests
+              - generic "64" [ref=e116]
+          - listitem [ref=e117]:
+            - link "Discussions" [ref=e118] [cursor=pointer]:
+              - /url: /cli/cli/discussions
+          - listitem [ref=e122]:
+            - link "Actions" [ref=e123] [cursor=pointer]:
+              - /url: /cli/cli/actions
+          - listitem [ref=e127]:
+            - link "Projects" [ref=e128] [cursor=pointer]:
+              - /url: /cli/cli/projects
+          - listitem [ref=e132]:
+            - link "Security and quality 13" [ref=e133] [cursor=pointer]:
+              - /url: /cli/cli/security
+              - generic [ref=e136]: Security and quality
+              - generic "13" [ref=e137]
+          - listitem [ref=e138]:
+            - link "Insights" [ref=e139] [cursor=pointer]:
+              - /url: /cli/cli/pulse
+    - generic [ref=e145]:
+      - navigation "Breadcrumb" [ref=e146]:
+        - list [ref=e147]:
+          - listitem [ref=e148]:
+            - link "Releases" [ref=e149] [cursor=pointer]:
+              - /url: /cli/cli/releases
+          - listitem [ref=e150]:
+            - link "v2.100.0" [ref=e151]:
+              - /url: /cli/cli/releases/tag/v2.100.0
+      - generic [ref=e153]:
+        - generic [ref=e154]:
+          - generic [ref=e155]:
+            - generic [ref=e157]:
+              - heading "GitHub CLI 2.100.0" [level=1] [ref=e158]
+              - link "Latest" [ref=e160] [cursor=pointer]:
+                - /url: /cli/cli/releases/latest
+            - button "Compare" [ref=e165] [cursor=pointer]
+          - generic [ref=e169]:
+            - generic [ref=e170]:
+              - img "@github-actions" [ref=e171]
+              - link "github-actions" [ref=e172] [cursor=pointer]:
+                - /url: /apps/github-actions
+              - text: released this 03 Sep 15:43 3 days ago
+            - generic [ref=e176]:
+              - text: Immutable
+              - generic [ref=e177]: release. Only release title and notes can be modified.
+            - link [ref=e179] [cursor=pointer]:
+              - /url: /cli/cli/tree/v2.100.0
+              - generic [ref=e180]:
+                - img "Tag" [ref=e181]
+                - text: v2.100.0
+            - generic [ref=e183]:
+              - link [ref=e184] [cursor=pointer]:
+                - /url: /cli/cli/commit/45437bc7eeeb3359bbfddd1742f79de7652fd3e2
+                - img "Commit" [ref=e185]
+                - code [ref=e187]: 45437bc
+              - group [ref=e188]:
+                - img "Verified commit signature" [ref=e190] [cursor=pointer]
+          - generic [ref=e192]:
+            - 'heading "Experimental: Route GitHub API traffic through a custom host" [level=2] [ref=e193]'
+            - paragraph [ref=e194]:
+              - text: Organizations can now route a GitHub host's API traffic through a gateway using the new per-host
+              - code [ref=e195]: api_host
+              - text: "configuration:"
+            - generic [ref=e196]:
+              - generic [ref=e197]:
+                - generic [ref=e198]: "# Route API traffic for github.com through a gateway"
+                - text: gh config set api_host gh-gateway.example.com --host github.com
+                - generic [ref=e199]: "# Read the configured API host"
+                - text: gh config get api_host --host github.com
+              - button "Copy code to clipboard" [ref=e201] [cursor=pointer]
+            - paragraph [ref=e205]: The original host remains in use for authentication, Git remotes, and browser URLs.
+            - generic [ref=e206]:
+              - paragraph [ref=e207]: Note
+              - paragraph [ref=e210]:
+                - code [ref=e211]: api_host
+                - text: is experimental and is not a security boundary. Requests may still reach the original host.
+            - heading "What's Changed" [level=2] [ref=e212]
+            - heading "✨ Features" [level=3] [ref=e213]
+            - list [ref=e214]:
+              - listitem [ref=e215]:
+                - text: Honor per-host
+                - code [ref=e216]: api_host
+                - text: routing across GitHub API requests by
+                - link "@williammartin" [ref=e217] [cursor=pointer]:
+                  - /url: https://github.com/williammartin
+                - text: in
+                - link "#14104" [ref=e218] [cursor=pointer]:
+                  - /url: https://github.com/cli/cli/pull/14104
+              - listitem [ref=e219]:
+                - text: Expose
+                - code [ref=e220]: api_host
+                - text: through
+                - code [ref=e221]: gh config get
+                - text: and
+                - code [ref=e222]: gh config set
+                - text: by
+                - link "@williammartin" [ref=e223] [cursor=pointer]:
+                  - /url: https://github.com/williammartin
+                - text: in
+                - link "#14332" [ref=e224] [cursor=pointer]:
+                  - /url: https://github.com/cli/cli/pull/14332
+              - listitem [ref=e225]:
+                - text: Add
+                - code [ref=e226]: webhook
+                - text: as an official extension by
+                - link "@williammartin" [ref=e227] [cursor=pointer]:
+                  - /url: https://github.com/williammartin
+                - text: in
+                - link "#14326" [ref=e228] [cursor=pointer]:
+                  - /url: https://github.com/cli/cli/pull/14326
+              - listitem [ref=e229]:
+                - text: Print full command help after command misuse when
+                - code [ref=e230]: gh
+                - text: is invoked by a coding agent by
+                - link "@niik" [ref=e231] [cursor=pointer]:
+                  - /url: https://github.com/niik
+                - text: in
+                - link "#14198" [ref=e232] [cursor=pointer]:
+                  - /url: https://github.com/cli/cli/pull/14198
+            - heading "🐛 Fixes" [level=3] [ref=e233]
+            - list [ref=e234]:
+              - listitem [ref=e235]:
+                - text: "fix(api): disable telemetry for unauthenticated GHES requests using absolute hostnames by"
+                - link "@williammartin" [ref=e236] [cursor=pointer]:
+                  - /url: https://github.com/williammartin
+                - text: in
+                - link "#14337" [ref=e237] [cursor=pointer]:
+                  - /url: https://github.com/cli/cli/pull/14337
+            - heading "📚 Docs & Chores" [level=3] [ref=e238]
+            - list [ref=e239]:
+              - listitem [ref=e240]:
+                - text: Fix discussion acceptance test flags by
+                - link "@williammartin" [ref=e241] [cursor=pointer]:
+                  - /url: https://github.com/williammartin
+                - text: in
+                - link "#14321" [ref=e242] [cursor=pointer]:
+                  - /url: https://github.com/cli/cli/pull/14321
+              - listitem [ref=e243]:
+                - text: Clarify supported GHES versions by
+                - link "@williammartin" [ref=e244] [cursor=pointer]:
+                  - /url: https://github.com/williammartin
+                - text: in
+                - link "#14324" [ref=e245] [cursor=pointer]:
+                  - /url: https://github.com/cli/cli/pull/14324
+              - listitem [ref=e246]:
+                - text: Improve automated issue triage analysis by
+                - link "@sergiou87" [ref=e247] [cursor=pointer]:
+                  - /url: https://github.com/sergiou87
+                - text: in
+                - link "#14318" [ref=e248] [cursor=pointer]:
+                  - /url: https://github.com/cli/cli/pull/14318
+              - listitem [ref=e249]:
+                - text: Record attachment counts in telemetry by
+                - link "@BagToad" [ref=e250] [cursor=pointer]:
+                  - /url: https://github.com/BagToad
+                - text: in
+                - link "#14327" [ref=e251] [cursor=pointer]:
+                  - /url: https://github.com/cli/cli/pull/14327
+            - heading [level=3] [ref=e252]:
+              - img ":dependabot:" [ref=e253]
+              - text: Dependencies
+            - list [ref=e254]:
+              - listitem [ref=e255]:
+                - text: "chore(deps): bump"
+                - code [ref=e256]: golang.org/x/crypto
+                - text: from 0.55.0 to 0.56.0 by
+                - link "@babakks" [ref=e257] [cursor=pointer]:
+                  - /url: https://github.com/babakks
+                - text: in
+                - link "#14331" [ref=e258] [cursor=pointer]:
+                  - /url: https://github.com/cli/cli/pull/14331
+              - listitem [ref=e259]:
+                - text: "chore(deps): bump Go toolchain from 1.26.7 to 1.26.8 by"
+                - link "@babakks" [ref=e260] [cursor=pointer]:
+                  - /url: https://github.com/babakks
+                - text: in
+                - link "#14330" [ref=e261] [cursor=pointer]:
+                  - /url: https://github.com/cli/cli/pull/14330
+              - listitem [ref=e262]:
+                - text: "chore(deps): bump"
+                - code [ref=e263]: github.com/cli/go-gh/v2
+                - text: from 2.15.0 to 2.16.0 by
+                - link "@williammartin" [ref=e264] [cursor=pointer]:
+                  - /url: https://github.com/williammartin
+                - text: in
+                - link "#14338" [ref=e265] [cursor=pointer]:
+                  - /url: https://github.com/cli/cli/pull/14338
+            - paragraph [ref=e266]:
+              - strong [ref=e267]: Full Changelog
+              - text: ":"
+              - link "v2.99.0...v2.100.0" [ref=e268] [cursor=pointer]:
+                - /url: https://github.com/cli/cli/compare/v2.99.0...v2.100.0
+        - generic [ref=e269]:
+          - generic [ref=e270]:
+            - heading "Contributors" [level=3] [ref=e271]
+            - list [ref=e272]:
+              - listitem [ref=e273]:
+                - link [ref=e274] [cursor=pointer]:
+                  - /url: https://github.com/niik
+                  - img "@niik" [ref=e275]
+              - listitem [ref=e276]:
+                - link [ref=e277] [cursor=pointer]:
+                  - /url: https://github.com/sergiou87
+                  - img "@sergiou87" [ref=e278]
+              - listitem [ref=e279]:
+                - link [ref=e280] [cursor=pointer]:
+                  - /url: https://github.com/williammartin
+                  - img "@williammartin" [ref=e281]
+              - listitem [ref=e282]:
+                - link [ref=e283] [cursor=pointer]:
+                  - /url: https://github.com/babakks
+                  - img "@babakks" [ref=e284]
+              - listitem [ref=e285]:
+                - link [ref=e286] [cursor=pointer]:
+                  - /url: https://github.com/BagToad
+                  - img "@BagToad" [ref=e287]
+            - generic [ref=e288]: niik, sergiou87, and 3 other contributors
+          - group [ref=e291]:
+            - button "Assets 25" [expanded] [ref=e292] [cursor=pointer]:
+              - generic [ref=e293]:
+                - generic [ref=e294]: Assets
+                - generic "25" [ref=e295]
+            - generic [ref=e296]: Loading
+          - generic [ref=e304]:
+            - generic [ref=e306]:
+              - 'button "thumbs up (4): github-actions[bot], 03:24PM on September 03" [disabled] [ref=e307]':
+                - generic [ref=e308]: 👍
+                - generic [ref=e309]: "4"
+              - 'button "hooray (5): github-actions[bot], 03:24PM on September 03" [disabled] [ref=e310]':
+                - generic [ref=e311]: 🎉
+                - generic [ref=e312]: "5"
+              - 'button "rocket (2): github-actions[bot], 03:24PM on September 03" [disabled] [ref=e313]':
+                - generic [ref=e314]: 🚀
+                - generic [ref=e315]: "2"
+            - generic [ref=e316]: 9 people reacted
+  - contentinfo [ref=e317]:
+    - heading "Footer" [level=2] [ref=e318]
+    - generic [ref=e319]:
+      - generic [ref=e320]:
+        - link "GitHub Homepage" [ref=e321] [cursor=pointer]:
+          - /url: https://github.com
+        - generic [ref=e324]: © 2026 GitHub, Inc.
+      - navigation "Footer" [ref=e325]:
+        - heading "Footer navigation" [level=3] [ref=e326]
+        - list "Footer navigation" [ref=e327]:
+          - listitem [ref=e328]:
+            - link "Terms" [ref=e329] [cursor=pointer]:
+              - /url: https://docs.github.com/site-policy/github-terms/github-terms-of-service
+          - listitem [ref=e330]:
+            - link "Privacy" [ref=e331] [cursor=pointer]:
+              - /url: https://docs.github.com/site-policy/privacy-policies/github-privacy-statement
+          - listitem [ref=e332]:
+            - link "Security" [ref=e333] [cursor=pointer]:
+              - /url: https://github.com/security
+          - listitem [ref=e334]:
+            - link "Status" [ref=e335] [cursor=pointer]:
+              - /url: https://www.githubstatus.com/
+          - listitem [ref=e336]:
+            - link "Community" [ref=e337] [cursor=pointer]:
+              - /url: https://github.community/
+          - listitem [ref=e338]:
+            - link "Docs" [ref=e339] [cursor=pointer]:
+              - /url: https://docs.github.com/
+          - listitem [ref=e340]:
+            - link "Contact" [ref=e341] [cursor=pointer]:
+              - /url: https://support.github.com?tags=dotcom-footer
+          - listitem [ref=e342]:
+            - button "Manage cookies" [ref=e344] [cursor=pointer]
+          - listitem [ref=e345]:
+            - button "Do not share my personal information" [ref=e347] [cursor=pointer]
