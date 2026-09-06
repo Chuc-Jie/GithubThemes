@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>404 · Token Not Found — GitHub Themes Studio</title>
+<meta name="description" content="GitHub Themes Studio 404 页：该路径未注册任何主题配置块。">
+<meta name="robots" content="noindex">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2016%2016'%3E%3Cpath%20fill='%232f81f7'%20d='M8%200c4.42%200%208%203.58%208%208a8.013%208.013%200%200%201-5.45%207.59c-.4.08-.55-.17-.55-.38%200-.27.01-1.13.01-2.2%200-.75-.25-1.23-.54-1.48%201.78-.2%203.65-.88%203.65-3.95%200-.88-.31-1.59-.82-2.15.08-.2.36-1.02-.08-2.12%200%200-.67-.22-2.2.82-.64-.18-1.32-.27-2-.27-.68%200-1.36.09-2%20.27-1.53-1.03-2.2-.82-2.2-.82-.44%201.1-.16%201.92-.08%202.12-.51.56-.82%201.28-.82%202.15%200%203.06%201.86%203.75%203.64%203.95-.23.2-.44.55-.51%201.07-.46.21-1.61.55-2.33-.66-.15-.24-.6-.83-1.23-.82-.67.01-.27.38.01.53.34.19.73.9.82%201.13.16.45.68%201.31%202.69.94%200%20.67.01%201.3.01%201.49%200%200%202.2.21-.15.45-.55.38A7.995%207.995%200%200%201%200%208c0-4.42%203.58-8%208-8Z'/%3E%3C/svg%3E">
+<style>
+/* ═══════════════ 基础与布局（与 GitHub Themes Studio 主站同源） ═══════════════ */
+* { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+    --st-bg: #0d1117;
+    --st-bg-2: #161b22;
+    --st-bg-3: #21262d;
+    --st-bg-inset: #010409;
+    --st-border: #30363d;
+    --st-border-2: #21262d;
+    --st-fg: #e6edf3;
+    --st-fg-2: #8b949e;
+    --st-fg-3: #6e7681;
+    --st-accent: #2f81f7;
+    --st-accent-2: #58a6ff;
+    --st-danger: #f85149;
+    --st-success: #3fb950;
+    --st-done: #a371f7;
+    --st-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+}
+/* 主题 A · Nord Light（取自内置基底 nord-light） */
+body[data-theme="nord-light"] {
+    --st-bg: #ECEFF4;
+    --st-bg-2: #E5E9F0;
+    --st-bg-3: #D8DEE9;
+    --st-bg-inset: #F5F7FA;
+    --st-border: #C8D0DA;
+    --st-border-2: #D8DEE9;
+    --st-fg: #2E3440;
+    --st-fg-2: #4C566A;
+    --st-fg-3: #616E87;
+    --st-accent: #5E81AC;
+    --st-accent-2: #3B6290;
+    --st-danger: #9A4450;
+    --st-success: #4E7034;
+    --st-done: #B48EAD;
+}
+/* 主题 B · 2026 Dark（取自内置基底 vscode-2026-dark） */
+body[data-theme="vscode-2026-dark"] {
+    --st-bg: #191A1B;
+    --st-bg-2: #202122;
+    --st-bg-3: #333536;
+    --st-bg-inset: #121314;
+    --st-border: #333536;
+    --st-border-2: #26292a;
+    --st-fg: #bfbfbf;
+    --st-fg-2: #8C8C8C;
+    --st-fg-3: #7a7b7d;
+    --st-accent: #48A0C7;
+    --st-accent-2: #297AA0;
+    --st-danger: #f48771;
+    --st-success: #73c991;
+    --st-done: #d2a8ff;
+}
+html, body { height: 100%; }
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif;
+    background: var(--st-bg);
+    color: var(--st-fg);
+    font-size: 14px;
+    line-height: 1.5;
+    overflow-x: hidden;
+    transition: background-color .25s, color .25s;
+}
+button { font: inherit; }
+a { color: var(--st-accent-2); text-decoration: none; }
+a:hover { text-decoration: underline; }
+::selection { background: rgba(88, 166, 255, .3); }
+
+/* ═══════════════ 顶部栏（与主站一致） ═══════════════ */
+.topbar {
+    display: flex; align-items: center; gap: 16px;
+    height: 56px; padding: 0 20px;
+    background: var(--st-bg-2);
+    border-bottom: 1px solid var(--st-border);
+    flex-shrink: 0; user-select: none;
+    transition: background-color .25s, border-color .25s;
+}
+.topbar .logo { display: flex; align-items: center; gap: 10px; font-weight: 600; font-size: 15px; }
+.topbar .logo svg { color: var(--st-accent-2); }
+.topbar .logo .sub { color: var(--st-fg-2); font-weight: 400; font-size: 12px; }
+.topbar .spacer { flex: 1; }
+.topbar .hint { font-size: 12px; color: var(--st-fg-3); }
+.btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 5px 14px; border-radius: 6px; cursor: pointer;
+    border: 1px solid var(--st-border);
+    background: var(--st-bg-3); color: var(--st-fg);
+    font-size: 13px; font-weight: 500;
+    transition: .15s; white-space: nowrap;
+}
+.btn:hover { border-color: var(--st-fg-3); background: var(--st-bg-inset); text-decoration: none; }
+.btn.primary { background: #238636; border-color: #2ea043; color: #fff; }
+.btn.primary:hover { background: #2ea043; }
+.btn.accent { background: var(--st-accent); border-color: var(--st-accent); color: #fff; }
+.btn.accent:hover { filter: brightness(1.1); background: var(--st-accent); }
+.btn.ghost { background: transparent; }
+.btn.ghost:hover { background: var(--st-bg-3); }
+.btn:active { transform: translateY(1px); }
+
+/* ═══════════════ 404 主体 ═══════════════ */
+.stage {
+    min-height: calc(100vh - 56px);
+    display: flex; align-items: center; justify-content: center;
+    padding: 34px 24px 24px;
+    background:
+        radial-gradient(900px 420px at 50% -10%, rgba(47,129,247,.10), transparent 70%),
+        var(--st-bg);
+}
+.card {
+    width: 100%; max-width: 940px;
+    background: var(--st-bg-2);
+    border: 1px solid var(--st-border);
+    border-radius: 14px;
+    box-shadow: 0 18px 50px rgba(1,4,9,.45);
+    overflow: hidden;
+    transition: background-color .25s, border-color .25s;
+}
+.card-grid { display: grid; grid-template-columns: 1.05fr .95fr; }
+
+/* ---- 左：404 视觉 ---- */
+.hero { padding: 30px 30px 26px; border-right: 1px solid var(--st-border); }
+.code404 {
+    display: flex; align-items: center; gap: .06em;
+    font-family: var(--st-mono); font-weight: 700;
+    font-size: clamp(72px, 13vw, 132px); line-height: 1;
+    letter-spacing: -.02em; margin-bottom: 6px;
+}
+.code404 .d {
+    background: linear-gradient(160deg, var(--st-accent-2), var(--st-accent));
+    -webkit-background-clip: text; background-clip: text;
+    -webkit-text-fill-color: transparent; color: transparent;
+}
+.code404 .zero {
+    position: relative; aspect-ratio: 1 / 1; height: .84em;
+    border: none; padding: 0; cursor: pointer;
+    border-radius: 50%;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-family: var(--st-mono); font-weight: 700; font-size: .62em;
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,.14), 0 6px 18px rgba(1,4,9,.35);
+    transition: transform .18s, box-shadow .18s;
+}
+.code404 .zero:hover { transform: scale(1.07) rotate(-4deg); }
+.code404 .zero:active { transform: scale(.98); }
+.code404 .zero:focus-visible { outline: 2px solid var(--st-accent-2); outline-offset: 3px; }
+.zero-legend {
+    display: flex; gap: 14px; flex-wrap: wrap;
+    font-family: var(--st-mono); font-size: 11px; color: var(--st-fg-3);
+    margin: 2px 0 22px;
+}
+.zero-legend b { color: var(--st-fg-2); font-weight: 500; }
+
+h1 { font-size: 22px; font-weight: 600; margin-bottom: 8px; }
+.eyebrow {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-family: var(--st-mono); font-size: 11px; letter-spacing: .04em;
+    text-transform: uppercase; color: var(--st-danger);
+    border: 1px solid rgba(248,81,73,.4); background: rgba(248,81,73,.08);
+    padding: 2px 9px; border-radius: 9px; margin-bottom: 14px;
+}
+.desc { color: var(--st-fg-2); font-size: 14px; margin-bottom: 20px; }
+.desc code {
+    font-family: var(--st-mono); font-size: 12.5px;
+    background: var(--st-bg-3); border: 1px solid var(--st-border);
+    border-radius: 5px; padding: 1px 5px; color: var(--st-fg);
+}
+
+/* 配色切换（用你自己的 Token 渲染这张页面） */
+.swatch-bar { margin-bottom: 22px; }
+.swatch-bar .cap {
+    font-size: 11px; font-weight: 600; text-transform: uppercase;
+    letter-spacing: .06em; color: var(--st-fg-3); margin-bottom: 7px;
+}
+.chips { display: flex; gap: 6px; flex-wrap: wrap; }
+.chip {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 5px 11px; border-radius: 999px; cursor: pointer;
+    border: 1px solid var(--st-border); background: var(--st-bg-inset);
+    color: var(--st-fg-2); font-size: 12px; transition: .15s;
+}
+.chip:hover { color: var(--st-fg); border-color: var(--st-fg-3); }
+.chip .dot { width: 9px; height: 9px; border-radius: 50%; box-shadow: inset 0 0 0 1px rgba(0,0,0,.25); }
+.chip.active { color: var(--st-fg); background: var(--st-bg-3); border-color: var(--st-accent); }
+
+.actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+/* ---- 右：诊断终端 ---- */
+.diag { padding: 30px 30px 26px; }
+.term {
+    border: 1px solid var(--st-border); border-radius: 10px;
+    background: var(--st-bg-inset); overflow: hidden; margin-bottom: 20px;
+}
+.term-head {
+    display: flex; align-items: center; gap: 6px;
+    padding: 8px 12px; background: var(--st-bg-3);
+    border-bottom: 1px solid var(--st-border);
+}
+.term-head .dot { width: 10px; height: 10px; border-radius: 50%; }
+.term-head .dot.r { background: #f85149; }
+.term-head .dot.y { background: #d29922; }
+.term-head .dot.g { background: #3fb950; }
+.term-head .t {
+    margin-left: 8px; font-family: var(--st-mono); font-size: 11px; color: var(--st-fg-3);
+}
+.term-body { padding: 12px 14px; font-family: var(--st-mono); font-size: 12px; line-height: 1.75; }
+.term-body .cmd { color: var(--st-fg-2); }
+.term-body .cmd b { color: var(--st-accent-2); font-weight: 500; }
+.row { display: grid; grid-template-columns: 78px 1fr; gap: 10px; }
+.row .k { color: var(--st-fg-3); }
+.row .v { color: var(--st-fg); word-break: break-all; }
+.row .v.bad { color: var(--st-danger); }
+.row .v.ok { color: var(--st-success); }
+.term-body .note { margin-top: 6px; color: var(--st-fg-2); font-size: 11.5px; }
+
+.links .cap {
+    font-size: 11px; font-weight: 600; text-transform: uppercase;
+    letter-spacing: .06em; color: var(--st-fg-3); margin-bottom: 7px;
+}
+.links ul { list-style: none; }
+.links li + li { margin-top: 2px; }
+.links a {
+    display: flex; align-items: center; gap: 8px;
+    padding: 6px 8px; border-radius: 6px; color: var(--st-fg);
+    font-size: 13px; transition: .15s;
+}
+.links a:hover { background: var(--st-bg-3); text-decoration: none; }
+.links a .arw { color: var(--st-fg-3); font-family: var(--st-mono); }
+.links a .tag {
+    margin-left: auto; font-family: var(--st-mono); font-size: 11px; color: var(--st-fg-3);
+}
+
+/* ---- 页脚 ---- */
+.foot {
+    border-top: 1px solid var(--st-border);
+    padding: 11px 30px; background: var(--st-bg-2);
+    display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+    font-size: 12px; color: var(--st-fg-3);
+}
+.foot .spacer { flex: 1; }
+kbd {
+    font-family: var(--st-mono); font-size: 11px;
+    background: var(--st-bg-3); border: 1px solid var(--st-border);
+    border-bottom-width: 2px; border-radius: 4px; padding: 0 5px; color: var(--st-fg-2);
+}
+
+/* ---- Toast（与主站一致） ---- */
+.toast {
+    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px);
+    background: #24292f; color: #fff; padding: 9px 20px; border-radius: 8px;
+    font-size: 13px; z-index: 99; opacity: 0;
+    transition: .25s; box-shadow: 0 8px 24px rgba(0,0,0,.35);
+    pointer-events: none;
+}
+.toast.on { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* ---- 响应式 ---- */
+@media (max-width: 900px) {
+    .card-grid { grid-template-columns: 1fr; }
+    .hero { border-right: none; border-bottom: 1px solid var(--st-border); }
+    .hero, .diag { padding: 24px 20px; }
+    .topbar .hint { display: none; }
+}
+@media (max-width: 560px) {
+    .topbar { gap: 10px; padding: 0 12px; }
+    .topbar .logo .sub { display: none; }
+    .stage { padding: 18px 12px; }
+    .row { grid-template-columns: 66px 1fr; }
+}
+</style>
+</head>
+<body data-theme="github-dark">
+
+<!-- ══════════ 顶部栏 ══════════ -->
+<header class="topbar">
+    <div class="logo">
+        <svg width="22" height="22" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M1.5 2.75a.75.75 0 0 1 .75-.75h11.5a.75.75 0 0 1 0 1.5H2.25a.75.75 0 0 1-.75-.75ZM2.5 6.75a.75.75 0 0 1 .75-.75h9.5a.75.75 0 0 1 0 1.5h-9.5a.75.75 0 0 1-.75-.75Zm-1 4a.75.75 0 0 1 .75-.75h11.5a.75.75 0 0 1 0 1.5H2.25a.75.75 0 0 1-.75-.75Z"></path></svg>
+        <span>GitHub Themes Studio</span>
+        <span class="sub">主题创作 · 实时预览 · 一键生成</span>
+    </div>
+    <div class="spacer"></div>
+    <span class="hint">HTTP 404 · Theme Not Found</span>
+    <button class="btn ghost" id="btn-diag" title="复制诊断信息">复制诊断</button>
+    <button class="btn accent" id="btn-theme" title="切换页面配色（快捷键 1 / 2 / 3）">⇄ 换配色</button>
+    <button class="btn primary" id="btn-back">← 返回工作室</button>
+</header>
+
+<!-- ══════════ 主体 ══════════ -->
+<main class="stage">
+<div class="card">
+    <div class="card-grid">
+
+        <!-- 左：404 -->
+        <section class="hero">
+            <div class="code404">
+                <span class="d">4</span>
+                <button class="zero" id="z-accent" title="accent" aria-label="切换 accent Token">0</button>
+                <button class="zero" id="z-done" title="done" aria-label="切换 done Token">0</button>
+            </div>
+            <div class="zero-legend">
+                <span>两个圆圈取自当前主题的 <b>accent</b> 与 <b>done</b> Token</span>
+            </div>
+
+            <div class="eyebrow">● Token Not Found</div>
+            <h1>没有找到这个主题</h1>
+            <p class="desc">
+                该路径没有匹配到任何主题配置块（<code>theme block</code>）。
+                它可能已被重命名、尚未导出，或者链接里多敲了一个字符。
+            </p>
+
+            <div class="swatch-bar">
+                <div class="cap">用内置基底渲染这张页面</div>
+                <div class="chips" id="chips">
+                    <button class="chip active" data-theme="github-dark"><span class="dot" style="background:#2f81f7"></span>⬛ GitHub Dark</button>
+                    <button class="chip" data-theme="nord-light"><span class="dot" style="background:#5E81AC"></span>❄️ Nord Light</button>
+                    <button class="chip" data-theme="vscode-2026-dark"><span class="dot" style="background:#48A0C7"></span>💻 2026 Dark</button>
+                </div>
+            </div>
+
+            <div class="actions">
+                <a class="btn primary" href="index.html">← 返回工作室</a>
+                <a class="btn" href="index.html#token-groups">编辑 18 个 Token</a>
+                <a class="btn" href="index.html#code-output">查看配置块</a>
+            </div>
+        </section>
+
+        <!-- 右：诊断 -->
+        <section class="diag">
+            <div class="term">
+                <div class="term-head">
+                    <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+                    <span class="t">themes-studio — diagnostics</span>
+                </div>
+                <div class="term-body">
+                    <div class="cmd"><b>$</b> themes resolve --path "<span id="d-path">/</span>"</div>
+                    <div class="row"><span class="k">status</span><span class="v bad" id="d-status">404 · Not Found</span></div>
+                    <div class="row"><span class="k">path</span><span class="v" id="d-path2">/</span></div>
+                    <div class="row"><span class="k">referrer</span><span class="v" id="d-ref">—</span></div>
+                    <div class="row"><span class="k">theme</span><span class="v ok" id="d-theme">GitHub Dark</span></div>
+                    <div class="row"><span class="k">tokens</span><span class="v">18 / 18 loaded</span></div>
+                    <div class="row"><span class="k">time</span><span class="v" id="d-time">—</span></div>
+                    <div class="note">↳ cause: 该路径未注册任何主题配置块，渲染已回退到内置基底。</div>
+                </div>
+            </div>
+
+            <div class="links">
+                <div class="cap">也许你在找</div>
+                <ul>
+                    <li><a href="index.html"><span class="arw">→</span> 主题编辑器<span class="tag">index.html</span></a></li>
+                    <li><a href="index.html#token-groups"><span class="arw">→</span> 18 个语义 Token<span class="tag">Token</span></a></li>
+                    <li><a href="index.html#code-output"><span class="arw">→</span> 生成 / 复制配置块<span class="tag">Export</span></a></li>
+                    <li><a href="index.html#btn-import"><span class="arw">→</span> 导入 .gh-theme / .json<span class="tag">Import</span></a></li>
+                </ul>
+            </div>
+        </section>
+
+    </div>
+    <div class="foot">
+        <span>GitHub Themes Studio · 适配 GithubTheme.js @v1.3.0.0</span>
+        <span class="spacer"></span>
+        <span>按 <kbd>1</kbd><kbd>2</kbd><kbd>3</kbd> 切换配色 · <kbd>Enter</kbd> 返回工作室</span>
+    </div>
+</div>
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ═══════════════════════════════════════════════════════════════
+ *  内置基底（与 Studio 的 BASES 保持一致）
+ * ═══════════════════════════════════════════════════════════════ */
+const THEMES = {
+    'github-dark':       { label: '⬛ GitHub Dark', type: 'dark',  accent: '#2f81f7', done: '#a371f7' },
+    'nord-light':        { label: '❄️ Nord Light',  type: 'light', accent: '#5E81AC', done: '#B48EAD' },
+    'vscode-2026-dark':  { label: '💻 2026 Dark',   type: 'dark',  accent: '#48A0C7', done: '#d2a8ff' },
+};
+const THEME_KEYS = Object.keys(THEMES);
+const STORE_KEY = 'gts-404-theme';
+
+const $ = id => document.getElementById(id);
+
+/* ---- 颜色工具（与 GithubTheme.js 算法一致） ---- */
+function hexToRgb(hex) {
+    let h = hex.replace('#', '');
+    if (h.length === 3) h = h.split('').map(c => c + c).join('');
+    const n = parseInt(h, 16);
+    return { r: (n >> 16) & 255, g: (n >> 8) & 255, b: n & 255 };
+}
+function luminance(hex) {
+    const { r, g, b } = hexToRgb(hex);
+    const f = v => { v /= 255; return v <= .03928 ? v / 12.92 : Math.pow((v + .055) / 1.055, 2.4); };
+    return .2126 * f(r) + .7152 * f(g) + .0722 * f(b);
+}
+/** 在色块上自动选择可读的前景色 */
+function readableOn(hex) {
+    return luminance(hex) > 0.42 ? '#0d1117' : '#ffffff';
+}
+function pad2(n) { return String(n).padStart(2, '0'); }
+function nowText() {
+    const d = new Date();
+    return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())} ` +
+           `${pad2(d.getHours())}:${pad2(d.getMinutes())}:${pad2(d.getSeconds())}`;
+}
+
+/* ---- Toast ---- */
+let toastTimer = null;
+function showToast(msg) {
+    const el = $('toast');
+    el.textContent = msg;
+    el.classList.add('on');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => el.classList.remove('on'), 1800);
+}
+
+/* ---- 应用主题 ---- */
+function applyTheme(key, announce) {
+    if (!THEMES[key]) key = 'github-dark';
+    const t = THEMES[key];
+    document.body.dataset.theme = key;
+    document.documentElement.style.colorScheme = t.type;
+
+    // 404 的两个圆圈 = accent / done Token
+    const za = $('z-accent'), zd = $('z-done');
+    za.style.background = t.accent;
+    za.style.color = readableOn(t.accent);
+    za.title = `accent · ${t.accent.toUpperCase()}（点击切换配色）`;
+    zd.style.background = t.done;
+    zd.style.color = readableOn(t.done);
+    zd.title = `done · ${t.done.toUpperCase()}（点击反向切换配色）`;
+
+    $('d-theme').textContent = t.label;
+    document.querySelectorAll('#chips .chip').forEach(c =>
+        c.classList.toggle('active', c.dataset.theme === key));
+
+    try { localStorage.setItem(STORE_KEY, key); } catch (e) {}
+    if (announce) showToast(`已切换至 ${t.label}`);
+}
+function cycleTheme(step) {
+    const cur = THEME_KEYS.indexOf(document.body.dataset.theme);
+    const next = THEME_KEYS[(cur + step + THEME_KEYS.length) % THEME_KEYS.length];
+    applyTheme(next, true);
+}
+
+/* ---- 复制 ---- */
+function copyText(text) {
+    if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(text).then(() => showToast('诊断信息已复制'), () => fallbackCopy(text));
+    } else fallbackCopy(text);
+}
+function fallbackCopy(text) {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.cssText = 'position:fixed;opacity:0;';
+    document.body.appendChild(ta);
+    ta.select();
+    try { document.execCommand('copy'); showToast('诊断信息已复制'); }
+    catch (e) { showToast('复制失败，请手动选择'); }
+    document.body.removeChild(ta);
+}
+function diagnosisText() {
+    const key = document.body.dataset.theme;
+    return [
+        'GitHub Themes Studio — 404 诊断',
+        '────────────────────────────────',
+        `status    : 404 Not Found`,
+        `path      : ${location.pathname}${location.search}`,
+        `referrer  : ${document.referrer || '(none)'}`,
+        `theme     : ${THEMES[key].label} (${key})`,
+        `tokens    : 18 / 18`,
+        `time      : ${nowText()}`,
+        `userAgent : ${navigator.userAgent}`,
+    ].join('\n');
+}
+
+/* ---- 初始化 ---- */
+function init() {
+    const path = location.pathname + location.search;
+    $('d-path').textContent = location.pathname;
+    $('d-path2').textContent = path || '/';
+    $('d-ref').textContent = document.referrer ? document.referrer.replace(/^https?:\/\//, '') : '—';
+    $('d-time').textContent = nowText();
+
+    // 优先读取上次选择，其次跟随系统偏好
+    let saved = null;
+    try { saved = localStorage.getItem(STORE_KEY); } catch (e) {}
+    if (!saved || !THEMES[saved]) {
+        saved = window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches
+            ? 'nord-light' : 'github-dark';
+    }
+    applyTheme(saved, false);
+
+    // 交互绑定
+    document.querySelectorAll('#chips .chip').forEach(c =>
+        c.addEventListener('click', () => applyTheme(c.dataset.theme, true)));
+    $('btn-theme').addEventListener('click', () => cycleTheme(1));
+    $('btn-diag').addEventListener('click', () => copyText(diagnosisText()));
+    $('btn-back').addEventListener('click', () => location.href = 'index.html');
+    $('z-accent').addEventListener('click', () => cycleTheme(1));
+    $('z-done').addEventListener('click', () => cycleTheme(-1));
+
+    // 快捷键：1 / 2 / 3 切配色，Enter 返回工作室
+    document.addEventListener('keydown', e => {
+        if (e.metaKey || e.ctrlKey || e.altKey) return;
+        const tag = (e.target.tagName || '').toLowerCase();
+        if (tag === 'input' || tag === 'textarea') return;
+        if (e.key >= '1' && e.key <= '3') applyTheme(THEME_KEYS[+e.key - 1], true);
+        else if (e.key === 'Enter') location.href = 'index.html';
+    });
+}
+init();
+</script>
+</body>
+</html>
