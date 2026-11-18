@@ -1,6 +1,6 @@
 # GitHub Themes — 代码地图（MAP）
 
-> 依据 `GithubTheme.js`（@version 1.3.0.0）实际代码整理，描述模块划分、数据流与运行时调度。代码全量内聚于单个 IIFE，无外部依赖、无网络请求。
+> 依据 `GithubTheme.js`（@version 1.4.0.0）实际代码整理，描述模块划分、数据流与运行时调度。代码全量内聚于单个 IIFE，无外部依赖、无网络请求。
 
 ## 1. 载体与元信息（头部注释）
 
@@ -10,7 +10,7 @@
 | `@match` | `*://*.github.com/*` | 仅 GitHub 全站注入 |
 | `@run-at` | `document-start` | 但 `init()` 挂 `DOMContentLoaded`（见第 4 节 readyState 分支） |
 | `@grant` | `GM_addStyle` / `GM_registerMenuCommand` / `GM_getValue` / `GM_setValue` | 无网络、无跨域 GM_xhr、无外部资源 |
-| 状态载体 | `GM_getValue`/`GM_setValue`（每次写入即时持久化） | 4 个独立设置键（见第 2 节） |
+| 状态载体 | `GM_getValue`/`GM_setValue`（每次写入即时持久化） | 6 个独立设置键（见第 2 节） |
 | 主题载体 | `themes` 静态配置内嵌脚本（24 项） | 数据驱动：加主题零逻辑改动 |
 
 ## 2. 状态与存储（GM_* 键 → 内存）
@@ -23,6 +23,8 @@
 | `github_boxrow_enabled` | —（直接 GM 读） | true | 列表行悬停增强开关 |
 | `github_boxrow_bar_width` | — | 4 | 悬停竖条粗细 px（滑杆 2–16） |
 | `github_release_group_enabled` | — | false | Release 分组排序开关（opt-in） |
+| `github_release_hint_enabled` | — | true | Release 资产类型徽章 + 悬浮说明总开关 |
+| `github_release_recommend_enabled` | — | true | 本机系统 ⭐ 标记开关（依赖上者） |
 
 注：`applyBoxRowEnhancement()` / `applyReleaseGrouping()` 每次执行时**实时读取** GM 值而非内存镜像，保证任意入口（面板/init/observer）状态一致；`github_theme` 的镜像在 `ThemePanel` 实例内维护。
 
@@ -41,6 +43,7 @@ flowchart LR
     subgraph Enhance["页面增强（独立 style 注入）"]
         BoxRow["列表行悬停增强<br/>applyBoxRowEnhancement"]
         Release["Release 分组排序<br/>applyReleaseGrouping + observer"]
+        Asset["Release 资产提示<br/>applyAssetHints + 悬浮浮层"]
     end
     subgraph UI["交互层"]
         Panel["ThemePanel 单例<br/>懒创建浮层面板"]
@@ -53,10 +56,12 @@ flowchart LR
     Apply --> BoxRow
     GM --> BoxRow
     GM --> Release
-    Panel -->|"重应用"| BoxRow & Release & Apply
+    GM --> Asset
+    Panel -->|"重应用"| BoxRow & Release & Asset & Apply
     Keys --> Panel
     Menu --> Panel
     DOM["GitHub 页面"] --> Release
+    DOM["GitHub 页面"] --> Asset
     DOM --> Apply
 ```
 
@@ -69,10 +74,11 @@ flowchart LR
 1. `injectAnimations()`：`GM_addStyle` 注入 toast 动画 keyframes。
 2. `applyBoxRowEnhancement()`：默认常驻注入列表行悬停样式（读开关与粗细）。
 3. `applyReleaseGrouping()` + `setupReleaseGroupingObserver()`：先按当前开关执行一次，再挂专用 observer（默认关闭时 no-op）。
-4. `new ThemePanel()`：仅构造（懒创建，不插 DOM），读取 `github_theme`。
-5. `applyTheme(GM_getValue('github_theme','default'))`：恢复上次主题。
-6. 注册菜单命令 ×2 + `document` 级 `keydown` 快捷键（第 5.5 节）。
-7. `pageshow`（`e.persisted`）→ 重新 `applyTheme` + `applyReleaseGrouping`（bfcache 兜底）。
+4. `applyAssetHints()` + `initAssetTipEvents()`：给资产行加类型徽章与 ⭐ 标记，并绑定悬浮 / 聚焦 / 点击事件（默认开启）。
+5. `new ThemePanel()`：仅构造（懒创建，不插 DOM），读取 `github_theme`。
+6. `applyTheme(GM_getValue('github_theme','default'))`：恢复上次主题。
+7. 注册菜单命令 ×2 + `document` 级 `keydown` 快捷键（第 5.6 节）。
+8. `pageshow`（`e.persisted`）→ 重新 `applyTheme` + `applyAssetHints()`（bfcache 兜底）。
 
 ### 4.2 启动时机分支（脚本尾部）
 
@@ -82,7 +88,7 @@ flowchart LR
 
 | 触发 | 监听范围 | 处理 | 防抖 |
 | --- | --- | --- | --- |
-| GitHub 异步渲染（任意 childList 变化） | `document.documentElement`，subtree | 先查 GM 开关，关闭直接 return → `applyReleaseGrouping()` | 300ms |
+| GitHub 异步渲染（任意 childList 变化） | `document.documentElement`，subtree | 先查 GM 开关，两者都关直接 return → `applyReleaseGrouping()` + `applyAssetHints()` | 300ms |
 
 防自循环：重排**仅在 DOM 顺序实际改变时**执行 `appendChild`（`children.some` 对比）；开启/关闭均以首次记录的原始相对序（`ghbOrig`）为基准。
 
@@ -123,10 +129,22 @@ flowchart LR
 - **图标着色** `colorReleaseIcon`：同系统 `.octicon-package` 图标统一 `PLATFORM_COLORS` 色（Windows 蓝 `#0078d4` / mac 银灰 `#8e8e93` / linux 橙 `#f5803e` / android 绿 `#3ddc84` / ios 靛紫 `#5e5ce6`），`!important`；关闭/未命中则移除 color 内联样式还原。
 - **observer**：`documentElement` `childList+subtree`，回调内先查 GM 开关（关闭即退），300ms 防抖触发。
 
-### 5.5 交互层（ThemePanel 单例 + 快捷键 + 菜单）
+### 5.5 Release 资产类型提示（DOM 装饰，默认开启）
+
+- **分类器** `classifyAsset(name)` 返回 `{ platform, arch, kind }`：
+  - 元数据类（`meta: true`，弱化显示、只给图标）：`signature`（`.sig/.asc/.minisig`）、`checksum`（`SHA256SUMS`、`*.sha256/.md5/.sha1`、`checksums.txt`）、`sbom`（`.spdx.json/.cdx.json`）、`provenance`（`.intoto.jsonl/.att.json`）、`symbols`（`.pdb/.dSYM.zip`）、`updater`（`latest*.yml|json`、`.blockmap/.delta`）；
+  - 主类型：`android`（apk/aab/xapk/apks）、`ios`（ipa）、`win-installer`（exe/msi/msix/appx）、`win-exe`（其它 exe）、`mac-installer`（dmg/pkg/mpkg）、`linux-pkg`（AppImage/deb/rpm/snap/flatpak）、`pkg-eco`（whl/jar/nupkg/gem/…）、`firmware`（uf2/hex/bin/img/elf）、`docs`（pdf/epub/…）、`archive`（zip/tar.*/7z/rar）。
+- **架构** `describeArch(name)`：`x86_64` → Intel/AMD 64 位、`aarch64|arm64` → ARM 64、`universal2` → 通用、`i686|i386` → 32 位；无匹配返回空。
+- **行内徽章**：`decorateAssetRow` 在下载链接 `a[href*="/releases/download/"]` 之后插入 `.ghb-asset-chip`（类型图标 + 短文案）；元数据类只显示图标；本机系统匹配时文案前加 `⭐`（如 `⭐ 🗜️ 免安装`），悬浮面板内显示「适合你的 <系统> 系统」。用户文案用动词短语内联回答「我该怎么用」，悬浮补「是什么 / 给谁 / 怎么装 / 替代选择」。
+- **推荐** `pickRecommended(items, userPlatform)`：仅 `RECOMMENDABLE_KINDS`（安装器 / 包 / 压缩包）参与，按 kind 分组，同组有 64 位 / 通用包则只标它们；`detectUserPlatform()` 由 UA 判定（iPadOS 按触点数判 ios）。
+- **悬浮浮层**：`ensureAssetTip` 挂 `body`（`position:fixed`，避免 `.Box` overflow 裁切）；`mouseover` 220ms 延迟打开、`mouseout` 120ms 延迟关闭、`focusin` 立即打开、点击切换、`Escape` / `scroll` / `resize` 关闭；浮层 `pointer-events:none`。
+- **幂等**：`decorateAssetRow` 更新前比对文本 / 类 / aria，避免 MutationObserver 自循环；`removeAssetHints()` 移除徽章与浮层、还原行文本。
+- **样式**：`injectAssetHintStyles()` 注入 `#github-asset-hint-style`，沿用 `--ghb-*` 主题变量，切主题自动变色。
+
+### 5.6 交互层（ThemePanel 单例 + 快捷键 + 菜单）
 
 - **面板生命周期**：`toggle()` → `show()`（首次 `createPanel()` 懒建并插入 body）↔ `hide()`（移 `show` 类）。打开后 100ms 自动聚焦搜索框。
-- **面板结构**（`createPanel` 模板）：头部（标题 + `23 款主题` 计数（`Object.keys(themes).length - 1`）+ 搜索框 + ×）；内容区三段：浅色网格 / 深色网格 + 空状态提示、📐 列表行增强控制（开关 + 竖条粗细滑杆 2–16px + 实时值）、🗂️ Release 分组开关；底部（当前主题名 + 🔄 恢复默认 + `⌨️ Ctrl+Shift+T` 提示）。
+- **面板结构**（`createPanel` 模板）：头部（标题 + `23 款主题` 计数（`Object.keys(themes).length - 1`）+ 搜索框 + ×）；内容区三段：浅色网格 / 深色网格 + 空状态提示、📐 列表行增强控制（开关 + 竖条粗细滑杆 2–16px + 实时值）、🗂️ Release 分组开关、🏷️ 资产类型徽章开关、⭐ 本机系统标记开关；底部（当前主题名 + 🔄 恢复默认 + `⌨️ Ctrl+Shift+T` 提示）。
 - **渲染** `renderThemeButtons(filter)`：`default` **恒排最前**，其余按配置序；default/浅色 → lightGrid，深色 → darkGrid；过滤词匹配显示名或 key；某区归零隐藏该区 + 显示空状态。按钮卡片含**主题色渐变预览**（`linear-gradient(135deg, bgDefault, bgSubtle, accent)`，default 为纯白）+ key 副标题；点击有 scale 反馈。
 - **切换** `switchTheme(key)`：`GM_setValue` → 更新镜像与按钮 `.active` → 更新底部当前主题 → `applyTheme` → toast。`resetToDefault()` = `switchTheme('default')` + toast。
 - **搜索防抖**：`input` 200ms 防抖重渲染；`ESC` 语义分级——**有搜索词**先清词恢复完整列表并 `stopPropagation`；无词不拦截，冒泡给 document 关闭面板。

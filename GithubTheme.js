@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         GitHub Themes
 // @namespace    github-themes
-// @version      1.3.0.0
+// @version      1.4.0.0
 // @description  GitHub 专业主题切换器 — 基于 CSS 变量覆盖，全面适配 GitHub 所有组件
 // @tag          Github
 // @tag          Themes
@@ -1130,12 +1130,12 @@
 
     function detectPlatform(name) {
         const n = name.toLowerCase();
-        const tok = (s) => new RegExp('(^|[-_])' + s + '(\\d|[-_]|$)', 'i').test(n);
-        if (/\.apk$|\.aab$|android/.test(n)) return 'android';
-        if (/\.ipa$|ios/.test(n)) return 'ios';
-        if (/\.exe$|\.msi$|windows|win32|win64|mingw/.test(n) || tok('win')) return 'windows';
+        const tok = (s) => new RegExp('(^|[-_.])' + s + '(\\d|[-_.]|$)', 'i').test(n);
+        if (/\.apk$|\.aab$|\.xapk$|\.apks$|android/.test(n)) return 'android';
+        if (/\.ipa$|\bios\b/.test(n)) return 'ios';
+        if (/\.exe$|\.msi$|\.msix$|\.appx$|windows|win32|win64|mingw/.test(n) || tok('win')) return 'windows';
         if (/\.dmg$|\.pkg$|macos|macosx|osx|darwin/.test(n) || tok('mac')) return 'mac';
-        if (/\.appimage$|\.deb$|\.rpm$|\.snap$|linux|ubuntu/.test(n)) return 'linux';
+        if (/\.appimage$|\.deb$|\.rpm$|\.snap$|\.flatpak$|linux|ubuntu/.test(n)) return 'linux';
         return 'other';
     }
 
@@ -1201,11 +1201,530 @@
         if (ghbReleaseObserver) return;
         let timer = null;
         ghbReleaseObserver = new MutationObserver(() => {
-            if (!GM_getValue('github_release_group_enabled', false)) return;
+            const grouping = GM_getValue('github_release_group_enabled', false);
+            const hints = GM_getValue('github_release_hint_enabled', true);
+            if (!grouping && !hints) return;
             clearTimeout(timer);
-            timer = setTimeout(applyReleaseGrouping, 300);
+            timer = setTimeout(() => { applyReleaseGrouping(); applyAssetHints(); }, 300);
         });
         ghbReleaseObserver.observe(document.documentElement, { childList: true, subtree: true });
+    }
+
+    /* ========================================================================
+     *  Release 资产类型提示 — 从文件名推断「是什么 / 给谁用 / 怎么装」
+     *  · 行内徽章：类型图标 + 短文案；本机系统可用的包在类型文案前加 ⭐
+     *  · 悬停 / 键盘聚焦 / 触屏点击 → 悬浮说明面板
+     *  · 校验和、签名、SBOM 等元数据只显示图标并弱化，避免喧宾夺主
+     *  · 浮层挂在 body + position:fixed，避免被 .Box 的 overflow 裁切
+     *  · 纯文件名推断，无网络请求；关闭开关即完全移除
+     * ======================================================================== */
+
+    const PLATFORM_LABELS = {
+        windows: 'Windows', mac: 'macOS', linux: 'Linux',
+        android: 'Android', ios: 'iOS'
+    };
+
+    // 资产类型规则：按顺序先命中者胜（元数据在前，避免 *.dSYM.zip 被当成压缩包）
+    const ASSET_KIND_RULES = [
+        {
+            id: 'signature', meta: true, icon: '🔏', chip: '签名', name: '分离签名',
+            re: /\.(sig|asc|minisig|p7s)$/i,
+            audience: '安全审计、镜像站、CI',
+            usage: '用 GPG / minisign 验证文件确实由作者发布',
+            note: '不是安装包，普通用户不需要下载'
+        },
+        {
+            id: 'checksum', meta: true, icon: '🧾', chip: '校验和', name: '校验和文件',
+            re: /(^|[-_.])(sha256sums?|sha512sums?|checksums?)(\.txt)?$|\.(sha256|sha512|sha1|md5|b2sum)$/i,
+            audience: '运维、谨慎用户、CI',
+            usage: '用 sha256sum -c 核对文件完整、未被篡改',
+            note: '可选文件，普通用户可忽略'
+        },
+        {
+            id: 'sbom', meta: true, icon: '📜', chip: 'SBOM', name: '软件物料清单（SBOM）',
+            re: /\.(sbom\.json|spdx(\.json|\.xml)?|cdx\.(json|xml))$/i,
+            audience: '合规、安全扫描、企业采购',
+            usage: '列出依赖与许可证，用于漏洞与合规审计',
+            note: '普通用户不需要'
+        },
+        {
+            id: 'provenance', meta: true, icon: '🛡️', chip: '来源证明', name: 'SLSA 构建来源证明',
+            re: /\.(intoto\.jsonl|sigstore(\.json)?|attestation)$/i,
+            audience: '供应链安全、审计',
+            usage: '用 slsa-verifier 校验二进制由哪个工作流构建',
+            note: '普通用户不需要'
+        },
+        {
+            id: 'symbols', meta: true, icon: '🐞', chip: '调试符号', name: '调试符号',
+            re: /\.(pdb|dsym\.zip|debug|sym|dbg)$/i,
+            audience: '开发者排障',
+            usage: '崩溃时把地址还原成函数名（配合调试器）',
+            note: '普通用户不需要'
+        },
+        {
+            id: 'updater', meta: true, icon: '♻️', chip: '更新元数据', name: '自动更新元数据',
+            re: /\.(blockmap|delta)$|^latest(-[a-z0-9]+)?\.(ya?ml|json)$/i,
+            audience: '应用内的更新器',
+            usage: '由客户端自动拉取，用于增量或版本检查',
+            note: '无需手动下载'
+        },
+        {
+            id: 'android', icon: '🤖', chip: 'Android', name: 'Android 安装包',
+            re: /\.(apk|aab|xapk|apks)$/i,
+            audience: 'Android 用户',
+            usage: '安装 .apk 前需允许「未知来源」；.aab 只能上架应用商店',
+            note: '多数手机选 arm64-v8a 版本'
+        },
+        {
+            id: 'ios', icon: '📱', chip: 'iOS', name: 'iOS 安装包',
+            re: /\.ipa$/i,
+            audience: 'iOS 开发者、越狱用户',
+            usage: '需要签名或侧载工具，普通用户无法直接安装'
+        },
+        {
+            id: 'win-installer', icon: '⚙️', chip: '安装版', name: 'Windows 安装程序',
+            re: /\.(msi|msix|appx)$|([-_])(setup|installer|install)([-_.].*)?\.exe$/i,
+            audience: 'Windows 用户',
+            usage: '双击安装，会写注册表并创建快捷方式，通常需要管理员权限',
+            note: '想免安装请找 portable 或 zip 包'
+        },
+        {
+            id: 'win-exe', icon: '🪟', chip: 'Windows 程序', name: 'Windows 可执行文件',
+            re: /\.exe$/i,
+            audience: 'Windows 用户',
+            usage: '可能是安装器，也可能是单文件绿色版，看文件名是否带 portable',
+            note: '不确定时优先选带 setup 的安装版'
+        },
+        {
+            id: 'mac-installer', icon: '💿', chip: 'macOS 安装包', name: 'macOS 安装包',
+            re: /\.(dmg|pkg)$/i,
+            audience: 'macOS 用户',
+            usage: '.dmg 打开后把 App 拖进 Applications；.pkg 走安装向导',
+            note: '.pkg 也可能是 FreeBSD 的系统包'
+        },
+        {
+            id: 'linux-pkg', icon: '🐧', chip: 'Linux 安装包', name: 'Linux 安装包',
+            re: /\.(deb|rpm|appimage|snap|flatpak|run)$/i,
+            audience: 'Linux 用户',
+            usage: 'AppImage 需 chmod +x 后直接运行；deb / rpm 用发行版包管理器安装'
+        },
+        {
+            id: 'pkg-eco', icon: '📚', chip: '语言包', name: '语言生态安装包',
+            re: /\.(whl|jar|nupkg|gem|crate|vsix|crx|xpi|conda)$/i,
+            audience: '开发者',
+            usage: '用对应语言的包管理器安装（pip / NuGet / RubyGems 等）',
+            note: 'VS Code、Chrome、Firefox 扩展也在其中'
+        },
+        {
+            id: 'firmware', icon: '🔌', chip: '固件/镜像', name: '固件或磁盘镜像',
+            re: /\.(uf2|hex|bin|img|elf)$/i,
+            audience: '硬件玩家、刷机用户',
+            usage: '按设备文档烧录到硬件或磁盘',
+            note: '刷错设备可能变砖，先确认型号'
+        },
+        {
+            id: 'docs', icon: '📄', chip: '文档', name: '文档',
+            re: /\.(pdf|epub|chm|mobi)$/i,
+            audience: '阅读文档的用户',
+            usage: '离线手册 / 电子书'
+        },
+        {
+            id: 'archive', icon: '🗜️', chip: '压缩包', name: '压缩归档',
+            re: /\.(zip|7z|tar\.gz|tgz|tar\.xz|txz|tar\.zst|tar\.bz2|tar|rar)$/i,
+            audience: '需要免安装 / 便携版的用户',
+            usage: '解压后查看内容，可能是便携程序、源码或资源文件',
+            note: '压缩包里通常有 README，先看再运行'
+        }
+    ];
+
+    // 只有这些类型才值得标记「适合本机系统」
+    const RECOMMENDABLE_KINDS = new Set(['android', 'win-installer', 'win-exe', 'mac-installer', 'linux-pkg', 'archive']);
+
+    // 本机系统（无网络，仅 UA 推断）
+    function detectUserPlatform() {
+        const ua = navigator.userAgent || '';
+        const plat = (navigator.userAgentData && navigator.userAgentData.platform) || navigator.platform || '';
+        if (/android/i.test(ua)) return 'android';
+        if (/iphone|ipad|ipod/i.test(ua)) return 'ios';
+        if (/mac/i.test(plat) && navigator.maxTouchPoints > 1) return 'ios';   // iPadOS 伪装成 macOS
+        if (/win/i.test(plat) || /windows/i.test(ua)) return 'windows';
+        if (/mac/i.test(plat)) return 'mac';
+        if (/linux|x11/i.test(plat)) return 'linux';
+        return 'other';
+    }
+
+    // 架构解读（决定同系统里到底该下哪个）
+    function describeArch(name) {
+        const n = name.toLowerCase();
+        if (/universal2?/.test(n)) return 'Universal（Intel + Apple Silicon 通用）';
+        if (/x86_64|amd64|x64|win64/.test(n)) return 'x86_64（Intel / AMD 64 位）';
+        if (/aarch64|arm64/.test(n)) return 'arm64（Apple Silicon / ARM 设备）';
+        if (/armv7|armhf/.test(n)) return '32 位 ARM（树莓派等）';
+        if (/i[3-6]86/.test(n)) return '32 位 x86（老旧设备）';
+        if (/riscv64/.test(n)) return 'RISC-V 64 位';
+        return '';
+    }
+
+    // 文件名 → { platform, arch, kind }
+    function classifyAsset(name) {
+        const n = name.toLowerCase();
+        const platform = detectPlatform(name);
+        const arch = describeArch(name);
+        for (let i = 0; i < ASSET_KIND_RULES.length; i++) {
+            if (ASSET_KIND_RULES[i].re.test(n)) return { platform: platform, arch: arch, kind: ASSET_KIND_RULES[i] };
+        }
+        return { platform: platform, arch: arch, kind: null };
+    }
+
+    // 徽章文字（压缩包按是否含系统信息区分「免安装」/「压缩包」）
+    function assetChipLabel(kind, platform) {
+        if (!kind) return '';
+        if (kind.id === 'archive') return platform === 'other' ? '压缩包' : '免安装';
+        return kind.chip;
+    }
+
+    function assetUsage(kind, platform) {
+        if (!kind) return '';
+        if (kind.id === 'archive' && platform !== 'other') return '解压后直接运行里面的程序，不需要安装';
+        return kind.usage;
+    }
+
+    // 计算「适合本机系统」的行：同系统优先 64 位/通用包，避免把所有变体都标星
+    function pickRecommended(items, userPlatform) {
+        if (!userPlatform || userPlatform === 'other') return new Set();
+        const candidates = items.filter(function (item) {
+            const info = item.info;
+            return info.kind && !info.kind.meta &&
+                info.platform === userPlatform &&
+                RECOMMENDABLE_KINDS.has(info.kind.id);
+        });
+        const is64 = function (item) {
+            return /(x86_64|amd64|x64|aarch64|arm64|universal2?)/.test(item.name.toLowerCase());
+        };
+        // 同一类型里若有 64 位/通用包就只标它们（避免 i686 也标星）；安装器没有架构信息，照标
+        const byKind = new Map();
+        candidates.forEach(function (item) {
+            const id = item.info.kind.id;
+            if (!byKind.has(id)) byKind.set(id, []);
+            byKind.get(id).push(item);
+        });
+        const picked = [];
+        byKind.forEach(function (list) {
+            const preferred = list.filter(is64);
+            (preferred.length ? preferred : list).forEach(function (item) { picked.push(item.row); });
+        });
+        return new Set(picked);
+    }
+
+    function assetAriaLabel(item, recommended) {
+        const info = item.info;
+        const kind = info.kind;
+        const parts = [];
+        if (recommended) parts.push('适合你的 ' + (PLATFORM_LABELS[info.platform] || '') + ' 系统');
+        if (kind) {
+            parts.push(kind.name);
+            parts.push('面向' + kind.audience);
+            parts.push(assetUsage(kind, info.platform));
+            if (kind.note) parts.push(kind.note);
+        }
+        parts.push('根据文件名推断');
+        return (kind ? kind.icon + ' ' : '') + parts.join('，');
+    }
+
+    function removeAssetChip(row) {
+        const chip = row.querySelector('.ghb-asset-chip');
+        if (chip) chip.remove();
+        if (row.classList.contains('ghb-asset-meta')) row.classList.remove('ghb-asset-meta');
+    }
+
+    function decorateAssetRow(item, recommended) {
+        const row = item.row;
+        const link = item.link;
+        const kind = item.info.kind;
+        if (!kind) { removeAssetChip(row); return; }
+
+        let chip = row.querySelector('.ghb-asset-chip');
+        if (!chip) {
+            chip = document.createElement('button');
+            chip.type = 'button';
+            chip.className = 'ghb-asset-chip';
+            chip.setAttribute('aria-expanded', 'false');
+            link.after(chip);   // 紧跟在资产名之后
+        }
+
+        chip.__ghb = { info: item.info, name: item.name, recommended: recommended };
+
+        const label = recommended
+            ? '⭐ ' + kind.icon + ' ' + assetChipLabel(kind, item.info.platform)
+            : (kind.meta ? kind.icon : kind.icon + ' ' + assetChipLabel(kind, item.info.platform));
+
+        if (chip.textContent !== label) chip.textContent = label;
+        if (chip.classList.contains('ghb-asset-chip--rec') !== !!recommended) {
+            chip.classList.toggle('ghb-asset-chip--rec', !!recommended);
+        }
+        if (chip.classList.contains('ghb-asset-chip--meta') !== (!!kind.meta && !recommended)) {
+            chip.classList.toggle('ghb-asset-chip--meta', !!kind.meta && !recommended);
+        }
+        const aria = assetAriaLabel(item, recommended);
+        if (chip.getAttribute('aria-label') !== aria) chip.setAttribute('aria-label', aria);
+        if (row.classList.contains('ghb-asset-meta') !== !!kind.meta) {
+            row.classList.toggle('ghb-asset-meta', !!kind.meta);
+        }
+    }
+
+    /* ── 悬浮说明面板（body 级 fixed，避免被 .Box 裁切） ───────────────── */
+
+    let ghbTipEl = null;
+    let ghbTipFor = null;
+    let ghbTipTimer = null;
+    let ghbTipCloseTimer = null;
+    let ghbTipBound = false;
+
+    function ensureAssetTip() {
+        if (ghbTipEl && document.body.contains(ghbTipEl)) return ghbTipEl;
+        ghbTipEl = document.createElement('div');
+        ghbTipEl.id = 'ghb-asset-tip';
+        ghbTipEl.className = 'ghb-asset-tip';
+        ghbTipEl.setAttribute('aria-hidden', 'true');
+        document.body.appendChild(ghbTipEl);
+        return ghbTipEl;
+    }
+
+    function renderAssetTip(tip, chip) {
+        const data = chip.__ghb;
+        const info = data.info;
+        const kind = info.kind;
+        const pLabel = PLATFORM_LABELS[info.platform] || '';
+        tip.textContent = '';
+
+        const head = document.createElement('div');
+        head.className = 'ghb-asset-tip-head';
+        head.textContent = kind ? kind.icon + ' ' + kind.name : '📦 ' + (pLabel || 'Release') + ' 资产';
+        tip.appendChild(head);
+
+        if (data.recommended) {
+            const rec = document.createElement('div');
+            rec.className = 'ghb-asset-tip-rec';
+            rec.textContent = '⭐ 适合你的 ' + pLabel + ' 系统';
+            tip.appendChild(rec);
+        }
+
+        const body = document.createElement('div');
+        body.className = 'ghb-asset-tip-body';
+        const addLine = function (key, val) {
+            const line = document.createElement('div');
+            line.className = 'ghb-asset-tip-line';
+            const k = document.createElement('span');
+            k.className = 'ghb-asset-tip-key';
+            k.textContent = key;
+            const v = document.createElement('span');
+            v.className = 'ghb-asset-tip-val';
+            v.textContent = val;
+            line.appendChild(k);
+            line.appendChild(v);
+            body.appendChild(line);
+        };
+
+        if (kind) {
+            if (pLabel) addLine('系统', pLabel);
+            addLine('面向', kind.audience);
+            addLine('用法', assetUsage(kind, info.platform));
+            if (kind.note) addLine('注意', kind.note);
+            if (info.arch) addLine('架构', info.arch);
+        } else {
+            if (pLabel) addLine('系统', pLabel);
+            if (info.arch) addLine('架构', info.arch);
+        }
+        tip.appendChild(body);
+
+        const foot = document.createElement('div');
+        foot.className = 'ghb-asset-tip-foot';
+        foot.textContent = '根据文件名推断 · ' + data.name;
+        tip.appendChild(foot);
+    }
+
+    function placeAssetTip(tip, chip) {
+        const r = chip.getBoundingClientRect();
+        const w = tip.offsetWidth;
+        const h = tip.offsetHeight;
+        let x = r.right + 10;
+        if (x + w > window.innerWidth - 12) x = r.left - w - 10;
+        if (x < 12) x = 12;
+        let y = r.top;
+        if (y + h > window.innerHeight - 12) y = window.innerHeight - h - 12;
+        if (y < 12) y = 12;
+        tip.style.left = Math.round(x) + 'px';
+        tip.style.top = Math.round(y) + 'px';
+    }
+
+    function openAssetTip(chip) {
+        if (!chip || !chip.__ghb) return;
+        const tip = ensureAssetTip();
+        renderAssetTip(tip, chip);
+        tip.style.visibility = 'hidden';
+        tip.classList.add('show');
+        tip.setAttribute('aria-hidden', 'false');
+        placeAssetTip(tip, chip);
+        tip.style.visibility = 'visible';
+        ghbTipFor = chip;
+        if (chip.getAttribute('aria-expanded') !== 'true') chip.setAttribute('aria-expanded', 'true');
+    }
+
+    function closeAssetTip() {
+        clearTimeout(ghbTipTimer);
+        clearTimeout(ghbTipCloseTimer);
+        if (ghbTipFor) {
+            if (ghbTipFor.getAttribute('aria-expanded') !== 'false') ghbTipFor.setAttribute('aria-expanded', 'false');
+            ghbTipFor = null;
+        }
+        if (ghbTipEl) {
+            ghbTipEl.classList.remove('show');
+            ghbTipEl.setAttribute('aria-hidden', 'true');
+        }
+    }
+
+    function initAssetTipEvents() {
+        if (ghbTipBound) return;
+        ghbTipBound = true;
+        const canHover = function () {
+            return !window.matchMedia || window.matchMedia('(hover: hover)').matches;
+        };
+
+        document.addEventListener('mouseover', function (e) {
+            const chip = e.target.closest ? e.target.closest('.ghb-asset-chip') : null;
+            if (!chip || !canHover()) return;
+            if (e.relatedTarget && chip.contains(e.relatedTarget)) return;
+            clearTimeout(ghbTipTimer);
+            ghbTipTimer = setTimeout(function () { openAssetTip(chip); }, 220);
+        });
+
+        document.addEventListener('mouseout', function (e) {
+            const chip = e.target.closest ? e.target.closest('.ghb-asset-chip') : null;
+            if (!chip) return;
+            if (e.relatedTarget && chip.contains(e.relatedTarget)) return;
+            clearTimeout(ghbTipTimer);
+            if (ghbTipFor === chip) ghbTipCloseTimer = setTimeout(closeAssetTip, 120);
+        });
+
+        document.addEventListener('focusin', function (e) {
+            const chip = e.target.closest ? e.target.closest('.ghb-asset-chip') : null;
+            if (chip) openAssetTip(chip);
+        });
+
+        document.addEventListener('focusout', function (e) {
+            const chip = e.target.closest ? e.target.closest('.ghb-asset-chip') : null;
+            if (chip) closeAssetTip();
+        });
+
+        document.addEventListener('click', function (e) {
+            const chip = e.target.closest ? e.target.closest('.ghb-asset-chip') : null;
+            if (!chip) return;
+            e.preventDefault();
+            e.stopPropagation();
+            if (e.detail === 0) return;   // 键盘 Enter/Space：聚焦时已展开，不再切换
+            if (ghbTipFor === chip) closeAssetTip();
+            else openAssetTip(chip);
+        }, true);
+
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') closeAssetTip();
+        });
+
+        document.addEventListener('scroll', closeAssetTip, true);
+        window.addEventListener('resize', closeAssetTip);
+        document.addEventListener('pointerdown', function (e) {
+            const chip = e.target.closest ? e.target.closest('.ghb-asset-chip') : null;
+            if (!chip) closeAssetTip();
+        }, true);
+    }
+
+    function injectAssetHintStyles() {
+        if (document.getElementById('github-asset-hint-style')) return;
+        const el = document.createElement('style');
+        el.id = 'github-asset-hint-style';
+        el.textContent = [
+            '.ghb-asset-chip {',
+            '  display: inline-flex; align-items: center; justify-content: center;',
+            '  margin-left: 6px; padding: 0 7px; height: 19px; border-radius: 999px;',
+            '  border: 1px solid var(--borderColor-default, rgba(127,127,127,.35));',
+            '  background: var(--bgColor-muted, rgba(127,127,127,.12));',
+            '  color: var(--fgColor-muted, #59636e);',
+            '  font: 500 11px/1 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;',
+            '  white-space: nowrap; vertical-align: middle; flex-shrink: 0;',
+            '  cursor: help; opacity: .85;',
+            '  transition: opacity .12s ease, border-color .12s ease, background-color .12s ease;',
+            '}',
+            '.ghb-asset-chip:hover { opacity: 1; border-color: var(--fgColor-muted, #59636e); }',
+            '.ghb-asset-chip--meta { padding: 0 6px; opacity: .6; }',
+            '.ghb-asset-chip--rec {',
+            '  opacity: 1; border-color: transparent;',
+            '  background: var(--bgColor-accent-emphasis, #0969da);',
+            '  color: var(--fgColor-onEmphasis, #fff);',
+            '}',
+            '.ghb-asset-chip--rec:hover { border-color: transparent; }',
+            '.ghb-asset-chip:focus-visible { outline: 2px solid var(--focus-outlineColor, #0969da); outline-offset: 2px; }',
+            'li.ghb-asset-meta .octicon { opacity: .55; }',
+            'li.ghb-asset-meta .wb-break-all { opacity: .72; }',
+            '.ghb-asset-tip {',
+            '  position: fixed; z-index: 10001; display: none;',
+            '  box-sizing: border-box; padding: 10px 12px; border-radius: 8px;',
+            '  width: max-content; max-width: min(320px, calc(100vw - 24px));',
+            '  background: var(--bgColor-default, #ffffff);',
+            '  color: var(--fgColor-default, #1f2328);',
+            '  border: 1px solid var(--borderColor-default, rgba(127,127,127,.35));',
+            '  box-shadow: 0 8px 24px rgba(0,0,0,.18);',
+            '  font: 400 12px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;',
+            '  text-align: left; pointer-events: none;',
+            '}',
+            '.ghb-asset-tip.show { display: block; }',
+            '.ghb-asset-tip-head { font-weight: 600; font-size: 12.5px; margin-bottom: 6px; }',
+            '.ghb-asset-tip-rec { color: var(--fgColor-accent, #0969da); font-size: 11.5px; margin: -2px 0 6px; }',
+            '.ghb-asset-tip-body { display: flex; flex-direction: column; gap: 3px; }',
+            '.ghb-asset-tip-line { display: flex; gap: 8px; }',
+            '.ghb-asset-tip-key { flex: 0 0 auto; min-width: 26px; color: var(--fgColor-muted, #59636e); }',
+            '.ghb-asset-tip-val { flex: 1 1 auto; }',
+            '.ghb-asset-tip-foot {',
+            '  margin-top: 7px; padding-top: 6px;',
+            '  border-top: 1px solid var(--borderColor-muted, rgba(127,127,127,.2));',
+            '  color: var(--fgColor-muted, #59636e); font-size: 11px; overflow-wrap: anywhere;',
+            '}'
+        ].join('\n');
+        document.head.appendChild(el);
+    }
+
+    function removeAssetHints() {
+        closeAssetTip();
+        document.querySelectorAll('.ghb-asset-chip').forEach(function (c) { c.remove(); });
+        document.querySelectorAll('.ghb-asset-meta').forEach(function (r) { r.classList.remove('ghb-asset-meta'); });
+        const styleEl = document.getElementById('github-asset-hint-style');
+        if (styleEl) styleEl.remove();
+    }
+
+    function applyAssetHints() {
+        if (!GM_getValue('github_release_hint_enabled', true)) {
+            removeAssetHints();
+            return;
+        }
+        injectAssetHintStyles();
+
+        const items = [];
+        document.querySelectorAll('.Box-row').forEach(function (row) {
+            const link = row.querySelector('a[href*="/releases/download/"]');
+            if (!link) return;
+            const href = link.getAttribute('href') || '';
+            const name = decodeURIComponent(href.split('/').pop() || '');
+            if (!name) return;
+            items.push({ row: row, link: link, name: name, info: classifyAsset(name) });
+        });
+
+        let recommended = new Set();
+        if (GM_getValue('github_release_recommend_enabled', true)) {
+            recommended = pickRecommended(items, detectUserPlatform());
+        }
+
+        items.forEach(function (item) {
+            decorateAssetRow(item, recommended.has(item.row));
+        });
     }
 
     /* ========================================================================
@@ -1267,6 +1786,19 @@
                             <label class="boxrow-toggle">
                                 <input type="checkbox" id="release-group-enabled" ${GM_getValue('github_release_group_enabled', false) ? 'checked' : ''} />
                                 <span>按系统分组排序（Windows → macOS → Linux → Android → iOS）</span>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="theme-section boxrow-section">
+                        <h4>🏷️ 资产类型提示 <span class="theme-type-count">图标 + 悬浮说明</span></h4>
+                        <div class="boxrow-controls">
+                            <label class="boxrow-toggle">
+                                <input type="checkbox" id="release-hint-enabled" ${GM_getValue('github_release_hint_enabled', true) ? 'checked' : ''} />
+                                <span>显示资产类型图标（悬停 / 点击查看说明）</span>
+                            </label>
+                            <label class="boxrow-toggle">
+                                <input type="checkbox" id="release-recommend-enabled" ${GM_getValue('github_release_recommend_enabled', true) ? 'checked' : ''} />
+                                <span>标记「⭐ 适合本机系统」的资产</span>
                             </label>
                         </div>
                     </div>
@@ -1815,6 +2347,25 @@
                     this.showToast(relEl.checked ? 'Release 分组排序已开启' : 'Release 分组排序已关闭');
                 });
             }
+
+            const hintEl = document.getElementById('release-hint-enabled');
+            const recommendEl = document.getElementById('release-recommend-enabled');
+            if (hintEl && recommendEl) recommendEl.disabled = !hintEl.checked;
+            if (hintEl) {
+                hintEl.addEventListener('change', () => {
+                    GM_setValue('github_release_hint_enabled', hintEl.checked);
+                    if (recommendEl) recommendEl.disabled = !hintEl.checked;
+                    applyAssetHints();
+                    this.showToast(hintEl.checked ? '资产类型提示已开启' : '资产类型提示已关闭');
+                });
+            }
+            if (recommendEl) {
+                recommendEl.addEventListener('change', () => {
+                    GM_setValue('github_release_recommend_enabled', recommendEl.checked);
+                    applyAssetHints();
+                    this.showToast(recommendEl.checked ? '已标出适合本机系统的资产' : '已取消本机系统标记');
+                });
+            }
         }
 
         show() {
@@ -1862,6 +2413,8 @@
         injectAnimations();
         applyBoxRowEnhancement();   // 默认常驻：列表行悬停增强（竖条跟随主题，受开关/粗细控制）
         applyReleaseGrouping();    // Release 分组排序（受开关控制，默认关闭）
+        applyAssetHints();         // 资产类型徽章 + 本机系统标记（受开关控制，默认开启）
+        initAssetTipEvents();
         setupReleaseGroupingObserver();
         themePanel = new ThemePanel();
 
@@ -1905,6 +2458,7 @@
                 const saved = GM_getValue('github_theme', 'default');
                 applyTheme(saved);
                 applyReleaseGrouping();
+                applyAssetHints();
             }
         });
     }
