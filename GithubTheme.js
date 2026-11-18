@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         GitHub Themes
 // @namespace    github-themes
-// @version      1.4.0.0
+// @version      1.4.0.2
 // @description  GitHub 专业主题切换器 — 基于 CSS 变量覆盖，全面适配 GitHub 所有组件
 // @tag          Github
 // @tag          Themes
@@ -508,6 +508,17 @@
   --bgColor-black:          ${t.bgEmphasis};
   --bgColor-inverse:        ${t.bgEmphasis};
   --bgColor-disabled:       ${t.bgInset};
+
+  /* ═══ Release 资产徽章色调（按明暗自动挑选可读色）═══ */
+  --ghb-win:       ${isDark ? '#6cb6ff' : '#0969da'};
+  --ghb-mac:       ${isDark ? '#c297ff' : '#8250df'};
+  --ghb-linux:     ${isDark ? '#f0a632' : '#9a6700'};
+  --ghb-android:   ${isDark ? '#56d364' : '#1a7f37'};
+  --ghb-ios:       ${isDark ? '#ff80c8' : '#bf3989'};
+  --ghb-portable:  ${isDark ? '#4fd1a5' : '#1a7f5a'};
+  --ghb-meta:      ${t.fgSubtle};
+  --ghb-neutral:   ${isDark ? '#a7b0bd' : '#6b7280'};
+  --ghb-star:      ${isDark ? '#ffd33d' : '#bf8700'};
 
   /* ═══ 核心文本 ═══ */
   --fgColor-default:        ${t.fgDefault};
@@ -1131,9 +1142,9 @@
     function detectPlatform(name) {
         const n = name.toLowerCase();
         const tok = (s) => new RegExp('(^|[-_.])' + s + '(\\d|[-_.]|$)', 'i').test(n);
-        if (/\.apk$|\.aab$|\.xapk$|\.apks$|android/.test(n)) return 'android';
+        if (/\.apk$|\.aab$|\.xapk$|\.apks$|\.obb$|android/.test(n)) return 'android';
         if (/\.ipa$|\bios\b/.test(n)) return 'ios';
-        if (/\.exe$|\.msi$|\.msix$|\.appx$|windows|win32|win64|mingw/.test(n) || tok('win')) return 'windows';
+        if (/\.exe$|\.msi$|\.msix$|\.msixbundle$|\.appx$|\.appxbundle$|\.msixupload$|\.appxupload$|\.xap$|windows|win32|win64|mingw/.test(n) || tok('win')) return 'windows';
         if (/\.dmg$|\.pkg$|macos|macosx|osx|darwin/.test(n) || tok('mac')) return 'mac';
         if (/\.appimage$|\.deb$|\.rpm$|\.snap$|\.flatpak$|linux|ubuntu/.test(n)) return 'linux';
         return 'other';
@@ -1225,112 +1236,156 @@
     };
 
     // 资产类型规则：按顺序先命中者胜（元数据在前，避免 *.dSYM.zip 被当成压缩包）
+    // 每条可带 tone（徽章色调：neutral/meta/win/mac/linux/android/ios），供样式层区分
     const ASSET_KIND_RULES = [
         {
-            id: 'signature', meta: true, icon: '🔏', chip: '签名', name: '分离签名',
+            id: 'signature', meta: true, icon: '🔏', chip: '签名', name: '分离签名', tone: 'meta',
             re: /\.(sig|asc|minisig|p7s)$/i,
             audience: '安全审计、镜像站、CI',
             usage: '用 GPG / minisign 验证文件确实由作者发布',
             note: '不是安装包，普通用户不需要下载'
         },
         {
-            id: 'checksum', meta: true, icon: '🧾', chip: '校验和', name: '校验和文件',
-            re: /(^|[-_.])(sha256sums?|sha512sums?|checksums?)(\.txt)?$|\.(sha256|sha512|sha1|md5|b2sum)$/i,
+            id: 'checksum', meta: true, icon: '🧾', chip: '校验和', name: '校验和文件', tone: 'meta',
+            re: /(^|[-_.])(sha256sums?|sha512sums?|checksums?|digests?)(\.(txt|asc))?$|\.(sha256|sha512|sha1|md5|b2sum)$/i,
             audience: '运维、谨慎用户、CI',
             usage: '用 sha256sum -c 核对文件完整、未被篡改',
             note: '可选文件，普通用户可忽略'
         },
         {
-            id: 'sbom', meta: true, icon: '📜', chip: 'SBOM', name: '软件物料清单（SBOM）',
+            id: 'sbom', meta: true, icon: '📜', chip: 'SBOM', name: '软件物料清单（SBOM）', tone: 'meta',
             re: /\.(sbom\.json|spdx(\.json|\.xml)?|cdx\.(json|xml))$/i,
             audience: '合规、安全扫描、企业采购',
             usage: '列出依赖与许可证，用于漏洞与合规审计',
             note: '普通用户不需要'
         },
         {
-            id: 'provenance', meta: true, icon: '🛡️', chip: '来源证明', name: 'SLSA 构建来源证明',
-            re: /\.(intoto\.jsonl|sigstore(\.json)?|attestation)$/i,
+            id: 'provenance', meta: true, icon: '🛡️', chip: '来源证明', name: 'SLSA 构建来源证明', tone: 'meta',
+            re: /\.(intoto\.jsonl|sigstore(\.json)?|attestation)$|provenance\.json$/i,
             audience: '供应链安全、审计',
             usage: '用 slsa-verifier 校验二进制由哪个工作流构建',
             note: '普通用户不需要'
         },
         {
-            id: 'symbols', meta: true, icon: '🐞', chip: '调试符号', name: '调试符号',
-            re: /\.(pdb|dsym\.zip|debug|sym|dbg)$/i,
+            id: 'symbols', meta: true, icon: '🐞', chip: '调试符号', name: '调试符号', tone: 'meta',
+            re: /(\.pdb$|\.dSYM\.zip$|\.dbg$|\.sym$|-debug(info)?\.|-dbgsym\.|\.debuginfo$|\.ddeb$)/i,
             audience: '开发者排障',
             usage: '崩溃时把地址还原成函数名（配合调试器）',
             note: '普通用户不需要'
         },
         {
-            id: 'updater', meta: true, icon: '♻️', chip: '更新元数据', name: '自动更新元数据',
-            re: /\.(blockmap|delta)$|^latest(-[a-z0-9]+)?\.(ya?ml|json)$/i,
+            id: 'updater', meta: true, icon: '♻️', chip: '更新元数据', name: '自动更新元数据', tone: 'meta',
+            re: /\.blockmap$|\.delta$|\.appinstaller$|^latest(-[a-z0-9]+)?\.(ya?ml|json)$|appcast\.xml$/i,
             audience: '应用内的更新器',
             usage: '由客户端自动拉取，用于增量或版本检查',
             note: '无需手动下载'
         },
         {
-            id: 'android', icon: '🤖', chip: 'Android', name: 'Android 安装包',
-            re: /\.(apk|aab|xapk|apks)$/i,
+            id: 'android', icon: '🤖', chip: 'Android', name: 'Android 安装包', tone: 'android',
+            re: /\.(apk|aab|xapk|apks|obb)$/i,
             audience: 'Android 用户',
             usage: '安装 .apk 前需允许「未知来源」；.aab 只能上架应用商店',
             note: '多数手机选 arm64-v8a 版本'
         },
         {
-            id: 'ios', icon: '📱', chip: 'iOS', name: 'iOS 安装包',
+            id: 'ios', icon: '📱', chip: 'iOS', name: 'iOS 安装包', tone: 'ios',
             re: /\.ipa$/i,
             audience: 'iOS 开发者、越狱用户',
             usage: '需要签名或侧载工具，普通用户无法直接安装'
         },
         {
-            id: 'win-installer', icon: '⚙️', chip: '安装版', name: 'Windows 安装程序',
-            re: /\.(msi|msix|appx)$|([-_])(setup|installer|install)([-_.].*)?\.exe$/i,
+            // 商店上传包（upload）只用于开发者上架，普通用户下了也用不了
+            id: 'win-store-upload', meta: true, icon: '📤', chip: '商店上传包', name: 'Windows 商店上传包（MSIX/AppX upload）', tone: 'meta',
+            re: /\.(msixupload|appxupload)$/i,
+            audience: '应用开发者（Microsoft Store 上架）',
+            usage: '在 Partner Center 上传，不能直接双击安装',
+            note: '普通用户别下，请选 msixbundle / appxbundle'
+        },
+        {
+            // 注意：msixbundle / appxbundle 必须排在 msix / appx 之前，否则会被 \.(msix|appx)$ 抢先命中
+            id: 'win-store', icon: '🪟', chip: 'Windows 应用包', name: 'Windows 商店应用包（MSIX/AppX 系列）', tone: 'win',
+            re: /\.(msixbundle|appxbundle|msix|appx|xap)$/i,
+            audience: 'Windows 10/11 用户、上架开发者',
+            usage: '双击或用 winget / App Installer 安装；bundle 内含多架构合一',
+            note: '优先选 bundle，一个包兼容 x64 / arm64'
+        },
+        {
+            id: 'win-patch', meta: true, icon: '🩹', chip: '系统补丁', name: 'Windows 系统补丁/合并模块', tone: 'meta',
+            re: /\.(msu|msp|msm|cab)$/i,
+            audience: '系统维护、企业部署',
+            usage: '系统级独立更新或 .msi 增量补丁，通常由更新机制自动应用',
+            note: '普通用户一般不需要手动安装'
+        },
+        {
+            id: 'win-installer', icon: '⚙️', chip: '安装版', name: 'Windows 安装程序', tone: 'win',
+            re: /\.msi$|(^|[^a-z])(setup|installer|install)([-_.\s\d][^]*)?\.exe$/i,
             audience: 'Windows 用户',
             usage: '双击安装，会写注册表并创建快捷方式，通常需要管理员权限',
             note: '想免安装请找 portable 或 zip 包'
         },
         {
-            id: 'win-exe', icon: '🪟', chip: 'Windows 程序', name: 'Windows 可执行文件',
+            id: 'win-exe', icon: '🪟', chip: 'Windows 程序', name: 'Windows 可执行文件', tone: 'win',
             re: /\.exe$/i,
             audience: 'Windows 用户',
             usage: '可能是安装器，也可能是单文件绿色版，看文件名是否带 portable',
             note: '不确定时优先选带 setup 的安装版'
         },
         {
-            id: 'mac-installer', icon: '💿', chip: 'macOS 安装包', name: 'macOS 安装包',
+            id: 'mac-installer', icon: '💿', chip: 'macOS 安装包', name: 'macOS 安装包', tone: 'mac',
             re: /\.(dmg|pkg)$/i,
             audience: 'macOS 用户',
             usage: '.dmg 打开后把 App 拖进 Applications；.pkg 走安装向导',
             note: '.pkg 也可能是 FreeBSD 的系统包'
         },
         {
-            id: 'linux-pkg', icon: '🐧', chip: 'Linux 安装包', name: 'Linux 安装包',
-            re: /\.(deb|rpm|appimage|snap|flatpak|run)$/i,
+            id: 'linux-pkg', icon: '🐧', chip: 'Linux 安装包', name: 'Linux 安装包', tone: 'linux',
+            re: /\.(deb|rpm|appimage|snap|flatpak|run|pkg\.tar\.xz|pkg\.tar\.zst|pkg\.tar\.gz)$/i,
             audience: 'Linux 用户',
-            usage: 'AppImage 需 chmod +x 后直接运行；deb / rpm 用发行版包管理器安装'
+            usage: 'AppImage 需 chmod +x 后直接运行；deb / rpm / pkg.tar.* 用发行版包管理器安装'
         },
         {
-            id: 'pkg-eco', icon: '📚', chip: '语言包', name: '语言生态安装包',
-            re: /\.(whl|jar|nupkg|gem|crate|vsix|crx|xpi|conda)$/i,
+            id: 'pkg-eco', icon: '📚', chip: '语言包', name: '语言生态安装包', tone: 'neutral',
+            re: /\.(whl|jar|war|ear|nupkg|gem|crate|vsix|crx|xpi|conda|phar)$/i,
             audience: '开发者',
             usage: '用对应语言的包管理器安装（pip / NuGet / RubyGems 等）',
             note: 'VS Code、Chrome、Firefox 扩展也在其中'
         },
         {
-            id: 'firmware', icon: '🔌', chip: '固件/镜像', name: '固件或磁盘镜像',
-            re: /\.(uf2|hex|bin|img|elf)$/i,
+            id: 'firmware', icon: '🔌', chip: '固件/镜像', name: '固件或磁盘镜像', tone: 'neutral',
+            re: /\.(uf2|hex|elf|img|dtb|uboot)$/i,
             audience: '硬件玩家、刷机用户',
             usage: '按设备文档烧录到硬件或磁盘',
             note: '刷错设备可能变砖，先确认型号'
         },
         {
-            id: 'docs', icon: '📄', chip: '文档', name: '文档',
+            id: 'vm-image', icon: '🖥️', chip: '虚拟机镜像', name: '虚拟机/云镜像', tone: 'neutral',
+            re: /\.(ova|ovf|vhd|vhdx|vmdk|vdi|qcow2)$/i,
+            audience: '虚拟化/云用户',
+            usage: '导入 VirtualBox / VMware / Hyper-V / KVM 直接启动',
+            note: '先确认虚拟化平台再选格式'
+        },
+        {
+            id: 'iso-image', icon: '💿', chip: '光盘镜像', name: '光盘/安装镜像', tone: 'neutral',
+            re: /\.iso$/i,
+            audience: '装机、系统维护用户',
+            usage: '刻录到光盘或写入 U 盘后启动安装'
+        },
+        {
+            id: 'docs', icon: '📄', chip: '文档', name: '文档', tone: 'meta',
             re: /\.(pdf|epub|chm|mobi)$/i,
             audience: '阅读文档的用户',
             usage: '离线手册 / 电子书'
         },
         {
-            id: 'archive', icon: '🗜️', chip: '压缩包', name: '压缩归档',
-            re: /\.(zip|7z|tar\.gz|tgz|tar\.xz|txz|tar\.zst|tar\.bz2|tar|rar)$/i,
+            id: 'script', icon: '📜', chip: '安装脚本', name: '安装/运行脚本', tone: 'neutral',
+            re: /(^|[/_-])(install|setup|bootstrap)\.(sh|ps1|bat)$/i,
+            audience: '命令行用户',
+            usage: '在终端执行（curl | sh / irm | iex）；先看清脚本内容再运行',
+            note: '来源不明的脚本不要直接执行'
+        },
+        {
+            id: 'archive', icon: '🗜️', chip: '压缩包', name: '压缩归档', tone: 'neutral',
+            re: /\.(zip|7z|rar|tar|tgz|tbz2|txz|tzst|tlz4|tzo|tar\.gz|tar\.bz2|tar\.xz|tar\.zst|tar\.lz4)$/i,
             audience: '需要免安装 / 便携版的用户',
             usage: '解压后查看内容，可能是便携程序、源码或资源文件',
             note: '压缩包里通常有 README，先看再运行'
@@ -1338,7 +1393,7 @@
     ];
 
     // 只有这些类型才值得标记「适合本机系统」
-    const RECOMMENDABLE_KINDS = new Set(['android', 'win-installer', 'win-exe', 'mac-installer', 'linux-pkg', 'archive']);
+    const RECOMMENDABLE_KINDS = new Set(['android', 'win-store', 'win-installer', 'win-exe', 'mac-installer', 'linux-pkg', 'archive']);
 
     // 本机系统（无网络，仅 UA 推断）
     function detectUserPlatform() {
@@ -1381,6 +1436,18 @@
         if (!kind) return '';
         if (kind.id === 'archive') return platform === 'other' ? '压缩包' : '免安装';
         return kind.chip;
+    }
+
+    // 徽章图标（免安装用开箱即用的箱子，压缩包保留压缩图标）
+    function assetChipIcon(kind, platform) {
+        if (!kind) return '';
+        if (kind.id === 'archive') return platform === 'other' ? '🗜️' : '📦';
+        return kind.icon;
+    }
+
+    // 免安装 = 压缩包且能识别到系统平台，单独走「绿色便携」色调
+    function isPortable(kind, platform) {
+        return !!kind && kind.id === 'archive' && platform !== 'other';
     }
 
     function assetUsage(kind, platform) {
@@ -1428,7 +1495,7 @@
             if (kind.note) parts.push(kind.note);
         }
         parts.push('根据文件名推断');
-        return (kind ? kind.icon + ' ' : '') + parts.join('，');
+        return (kind ? assetChipIcon(kind, info.platform) + ' ' : '') + parts.join('，');
     }
 
     function removeAssetChip(row) {
@@ -1454,16 +1521,20 @@
 
         chip.__ghb = { info: item.info, name: item.name, recommended: recommended };
 
+        const portable = isPortable(kind, item.info.platform);
+        const icon = assetChipIcon(kind, item.info.platform);
+        const ico = '<span class="ghb-chip-ico">' + icon + '</span>';
         const label = recommended
-            ? '⭐ ' + kind.icon + ' ' + assetChipLabel(kind, item.info.platform)
-            : (kind.meta ? kind.icon : kind.icon + ' ' + assetChipLabel(kind, item.info.platform));
+            ? (kind.meta ? '' : '<span class="ghb-chip-star">⭐</span>') + ico + assetChipLabel(kind, item.info.platform)
+            : (kind.meta ? ico : ico + assetChipLabel(kind, item.info.platform));
 
-        if (chip.textContent !== label) chip.textContent = label;
+        if (chip.innerHTML !== label) chip.innerHTML = label;
+        const baseTone = portable ? 'portable' : (kind.tone || 'neutral');
+        const tone = kind.meta && baseTone !== 'meta' ? baseTone + ' meta' : baseTone;
+        if (chip.dataset.tone !== tone) chip.dataset.tone = tone;
+        if (chip.dataset.portable !== (portable ? '1' : '0')) chip.dataset.portable = portable ? '1' : '0';
         if (chip.classList.contains('ghb-asset-chip--rec') !== !!recommended) {
             chip.classList.toggle('ghb-asset-chip--rec', !!recommended);
-        }
-        if (chip.classList.contains('ghb-asset-chip--meta') !== (!!kind.meta && !recommended)) {
-            chip.classList.toggle('ghb-asset-chip--meta', !!kind.meta && !recommended);
         }
         const aria = assetAriaLabel(item, recommended);
         if (chip.getAttribute('aria-label') !== aria) chip.setAttribute('aria-label', aria);
@@ -1496,10 +1567,15 @@
         const kind = info.kind;
         const pLabel = PLATFORM_LABELS[info.platform] || '';
         tip.textContent = '';
+        const portable = isPortable(kind, info.platform);
+        const toneVar = portable ? '--ghb-portable,#1a7f5a'
+            : ({ win: '--ghb-win,#2f81f7', mac: '--ghb-mac,#a371f7', linux: '--ghb-linux,#e3a008',
+            android: '--ghb-android,#3fb950', ios: '--ghb-ios,#db61a2', meta: '--ghb-meta,#8c959f' }[ (kind.tone||'neutral') ] || '--ghb-neutral,#6e7781');
+        tip.style.setProperty('--ghb-tone', 'var(' + toneVar + ')');
 
         const head = document.createElement('div');
         head.className = 'ghb-asset-tip-head';
-        head.textContent = kind ? kind.icon + ' ' + kind.name : '📦 ' + (pLabel || 'Release') + ' 资产';
+        head.textContent = kind ? assetChipIcon(kind, info.platform) + ' ' + kind.name : '📦 ' + (pLabel || 'Release') + ' 资产';
         tip.appendChild(head);
 
         if (data.recommended) {
@@ -1643,50 +1719,116 @@
         const el = document.createElement('style');
         el.id = 'github-asset-hint-style';
         el.textContent = [
+            // ── 徽章：语义色弱底 + 高对比前景；色调由 data-tone 区分，明暗主题都自动适配 ──
             '.ghb-asset-chip {',
-            '  display: inline-flex; align-items: center; justify-content: center;',
-            '  margin-left: 6px; padding: 0 7px; height: 19px; border-radius: 999px;',
-            '  border: 1px solid var(--borderColor-default, rgba(127,127,127,.35));',
-            '  background: var(--bgColor-muted, rgba(127,127,127,.12));',
-            '  color: var(--fgColor-muted, #59636e);',
-            '  font: 500 11px/1 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;',
+            '  --ghb-tone: var(--ghb-neutral);',
+            '  display: inline-flex; align-items: center; justify-content: center; gap: 5px;',
+            '  margin-left: 6px; padding: 0 11px; height: 23px; border-radius: 999px;',
+            '  border: 1px solid color-mix(in srgb, var(--ghb-tone) 30%, transparent);',
+            '  background: color-mix(in srgb, var(--ghb-tone) 10%, transparent);',
+            '  color: color-mix(in srgb, var(--ghb-tone) 82%, var(--fgColor-default, #1f2328));',
+            '  font: 600 12.5px/1 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;',
+            '  letter-spacing: .2px;',
             '  white-space: nowrap; vertical-align: middle; flex-shrink: 0;',
-            '  cursor: help; opacity: .85;',
-            '  transition: opacity .12s ease, border-color .12s ease, background-color .12s ease;',
+            '  cursor: help;',
+            "  transition: background-color .12s ease, border-color .12s ease, color .12s ease, transform .12s ease;",
             '}',
-            '.ghb-asset-chip:hover { opacity: 1; border-color: var(--fgColor-muted, #59636e); }',
-            '.ghb-asset-chip--meta { padding: 0 6px; opacity: .6; }',
+            '@supports not (background: color-mix(in srgb, red 14%, transparent)) {',
+            '  .ghb-asset-chip { background: var(--bgColor-neutral-muted, rgba(127,127,127,.16)); color: var(--fgColor-default, #1f2328); border-color: var(--borderColor-default, rgba(127,127,127,.4)); }',
+            '}',
+            '.ghb-asset-chip:hover {',
+            '  background: color-mix(in srgb, var(--ghb-tone) 20%, transparent);',
+            '  border-color: color-mix(in srgb, var(--ghb-tone) 55%, transparent);',
+            '  color: color-mix(in srgb, var(--ghb-tone) 92%, var(--fgColor-default, #1f2328));',
+            '}',
+            '.ghb-asset-chip:active { transform: scale(.96); }',
+            '.ghb-asset-chip[data-tone^="win"]      { --ghb-tone: var(--ghb-win, #2f81f7); }',
+            '.ghb-asset-chip[data-tone^="mac"]      { --ghb-tone: var(--ghb-mac, #a371f7); }',
+            '.ghb-asset-chip[data-tone^="linux"]    { --ghb-tone: var(--ghb-linux, #e3a008); }',
+            '.ghb-asset-chip[data-tone^="android"]  { --ghb-tone: var(--ghb-android, #3fb950); }',
+            '.ghb-asset-chip[data-tone^="ios"]      { --ghb-tone: var(--ghb-ios, #db61a2); }',
+            '.ghb-asset-chip[data-tone^="portable"] { --ghb-tone: var(--ghb-portable, #1a7f5a); }',
+            '.ghb-asset-chip[data-tone^="meta"]     { --ghb-tone: var(--ghb-meta, #8c959f); }',
+            '.ghb-asset-chip[data-tone^="neutral"]  { --ghb-tone: var(--ghb-neutral, #6e7781); }',
+            // ── 免安装 / 便携版：绿色描边胶囊，左侧图标带浅色圆底，清爽不压抑 ──
+            '.ghb-asset-chip[data-portable="1"] {',
+            '  gap: 6px; padding: 0 12px 0 5px;',
+            '  border-color: color-mix(in srgb, var(--ghb-portable, #1a7f5a) 42%, transparent);',
+            '  background: color-mix(in srgb, var(--ghb-portable, #1a7f5a) 9%, transparent);',
+            '  color: color-mix(in srgb, var(--ghb-portable, #1a7f5a) 85%, var(--fgColor-default, #1f2328));',
+            '  font-weight: 600;',
+            '}',
+            '.ghb-asset-chip[data-portable="1"]:hover {',
+            '  background: color-mix(in srgb, var(--ghb-portable, #1a7f5a) 18%, transparent);',
+            '  border-color: color-mix(in srgb, var(--ghb-portable, #1a7f5a) 62%, transparent);',
+            '  color: color-mix(in srgb, var(--ghb-portable, #1a7f5a) 95%, var(--fgColor-default, #1f2328));',
+            '}',
+            // 图标单独装进一个浅色小圆底，和文字拉开层次
+            '.ghb-asset-chip .ghb-chip-ico {',
+            '  display: inline-flex; align-items: center; justify-content: center;',
+            '  width: 16px; height: 16px; border-radius: 50%;',
+            '  font-size: 11px; line-height: 1;',
+            '  background: color-mix(in srgb, var(--ghb-tone) 18%, transparent);',
+            '}',
+            '.ghb-asset-chip[data-portable="1"] .ghb-chip-ico {',
+            '  background: color-mix(in srgb, var(--ghb-portable, #1a7f5a) 22%, transparent);',
+            '}',
+            // 元信息（签名/校验和/符号等）：更小、虚线边框，和安装包拉开层级
+            '.ghb-asset-chip[data-tone$="meta"] { padding: 0 6px; font-weight: 500; border-style: dashed; }',
+            // 推荐徽章：实心强调底，⭐ 单独高亮
             '.ghb-asset-chip--rec {',
-            '  opacity: 1; border-color: transparent;',
+            '  border-color: transparent;',
             '  background: var(--bgColor-accent-emphasis, #0969da);',
             '  color: var(--fgColor-onEmphasis, #fff);',
+            '  box-shadow: 0 1px 2px color-mix(in srgb, var(--bgColor-accent-emphasis, #0969da) 40%, transparent);',
             '}',
-            '.ghb-asset-chip--rec:hover { border-color: transparent; }',
+            '.ghb-asset-chip--rec:hover {',
+            '  background: color-mix(in srgb, var(--bgColor-accent-emphasis, #0969da) 88%, black);',
+            '  border-color: transparent; color: var(--fgColor-onEmphasis, #fff);',
+            '}',
+            '.ghb-asset-chip--rec .ghb-chip-star { color: var(--ghb-star, #ffd33d); }',
             '.ghb-asset-chip:focus-visible { outline: 2px solid var(--focus-outlineColor, #0969da); outline-offset: 2px; }',
-            'li.ghb-asset-meta .octicon { opacity: .55; }',
-            'li.ghb-asset-meta .wb-break-all { opacity: .72; }',
+            'li.ghb-asset-meta { opacity: .75; }',
+            'li.ghb-asset-meta .octicon { opacity: .6; }',
+            'li.ghb-asset-meta .wb-break-all { opacity: .8; }',
+            // ── 浮层：三层结构（标题 / 内容 / 页脚），左侧色条呼应徽章色调 ──
             '.ghb-asset-tip {',
             '  position: fixed; z-index: 10001; display: none;',
-            '  box-sizing: border-box; padding: 10px 12px; border-radius: 8px;',
-            '  width: max-content; max-width: min(320px, calc(100vw - 24px));',
-            '  background: var(--bgColor-default, #ffffff);',
+            '  box-sizing: border-box; padding: 0 0 10px; border-radius: 10px; overflow: hidden;',
+            '  width: max-content; max-width: min(380px, calc(100vw - 24px));',
+            '  background: var(--bgColor-overlay, var(--bgColor-default, #ffffff));',
             '  color: var(--fgColor-default, #1f2328);',
             '  border: 1px solid var(--borderColor-default, rgba(127,127,127,.35));',
-            '  box-shadow: 0 8px 24px rgba(0,0,0,.18);',
-            '  font: 400 12px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;',
+            '  box-shadow: 0 1px 0 color-mix(in srgb, var(--ghb-tone, transparent) 70%, transparent) inset,',
+            '              0 10px 30px rgba(0,0,0,.22);',
+            '  font: 400 13.5px/1.6 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;',
             '  text-align: left; pointer-events: none;',
             '}',
             '.ghb-asset-tip.show { display: block; }',
-            '.ghb-asset-tip-head { font-weight: 600; font-size: 12.5px; margin-bottom: 6px; }',
-            '.ghb-asset-tip-rec { color: var(--fgColor-accent, #0969da); font-size: 11.5px; margin: -2px 0 6px; }',
-            '.ghb-asset-tip-body { display: flex; flex-direction: column; gap: 3px; }',
-            '.ghb-asset-tip-line { display: flex; gap: 8px; }',
-            '.ghb-asset-tip-key { flex: 0 0 auto; min-width: 26px; color: var(--fgColor-muted, #59636e); }',
+            '.ghb-asset-tip-head {',
+            '  display: flex; align-items: center; gap:6px;',
+            '  padding: 10px 13px 9px; margin-bottom: 9px;',
+            '  font-weight: 700; font-size: 14px;',
+            '  background: color-mix(in srgb, var(--ghb-tone, var(--ghb-neutral)) 12%, transparent);',
+            '  border-bottom: 1px solid var(--borderColor-muted, rgba(127,127,127,.2));',
+            '}',
+            '.ghb-asset-tip-head::before {',
+            '  content: ""; width: 3px; align-self: stretch; margin-right: 2px; border-radius: 2px;',
+            '  background: var(--ghb-tone, var(--ghb-neutral));',
+            '}',
+            '.ghb-asset-tip-rec {',
+            '  margin: -2px 13px 7px; padding: 4px 9px; border-radius: 6px; display: inline-block;',
+            '  background: color-mix(in srgb, var(--bgColor-accent-emphasis, #0969da) 14%, transparent);',
+            '  color: var(--fgColor-accent, #0969da); font-weight: 600; font-size: 12.5px;',
+            '}',
+            '.ghb-asset-tip-body { display: flex; flex-direction: column; gap: 5px; padding: 0 13px; }',
+            '.ghb-asset-tip-line { display: flex; gap: 9px; }',
+            '.ghb-asset-tip-key { flex: 0 0 auto; min-width: 30px; color: var(--fgColor-muted, #59636e); }',
             '.ghb-asset-tip-val { flex: 1 1 auto; }',
             '.ghb-asset-tip-foot {',
-            '  margin-top: 7px; padding-top: 6px;',
+            '  margin: 9px 13px 0; padding-top: 8px;',
             '  border-top: 1px solid var(--borderColor-muted, rgba(127,127,127,.2));',
-            '  color: var(--fgColor-muted, #59636e); font-size: 11px; overflow-wrap: anywhere;',
+            '  color: var(--fgColor-muted, #59636e); font-size: 12px; overflow-wrap: anywhere;',
             '}'
         ].join('\n');
         document.head.appendChild(el);

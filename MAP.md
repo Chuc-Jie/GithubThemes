@@ -1,6 +1,6 @@
 # GitHub Themes — 代码地图（MAP）
 
-> 依据 `GithubTheme.js`（@version 1.4.0.0）实际代码整理，描述模块划分、数据流与运行时调度。代码全量内聚于单个 IIFE，无外部依赖、无网络请求。
+> 依据 `GithubTheme.js`（@version 1.4.0.2）实际代码整理，描述模块划分、数据流与运行时调度。代码全量内聚于单个 IIFE，无外部依赖、无网络请求。
 
 ## 1. 载体与元信息（头部注释）
 
@@ -132,11 +132,12 @@ flowchart LR
 ### 5.5 Release 资产类型提示（DOM 装饰，默认开启）
 
 - **分类器** `classifyAsset(name)` 返回 `{ platform, arch, kind }`：
-  - 元数据类（`meta: true`，弱化显示、只给图标）：`signature`（`.sig/.asc/.minisig`）、`checksum`（`SHA256SUMS`、`*.sha256/.md5/.sha1`、`checksums.txt`）、`sbom`（`.spdx.json/.cdx.json`）、`provenance`（`.intoto.jsonl/.att.json`）、`symbols`（`.pdb/.dSYM.zip`）、`updater`（`latest*.yml|json`、`.blockmap/.delta`）；
-  - 主类型：`android`（apk/aab/xapk/apks）、`ios`（ipa）、`win-installer`（exe/msi/msix/appx）、`win-exe`（其它 exe）、`mac-installer`（dmg/pkg/mpkg）、`linux-pkg`（AppImage/deb/rpm/snap/flatpak）、`pkg-eco`（whl/jar/nupkg/gem/…）、`firmware`（uf2/hex/bin/img/elf）、`docs`（pdf/epub/…）、`archive`（zip/tar.*/7z/rar）。
+  - 元数据类（`meta: true`，弱化显示、只给图标）：`signature`（`.sig/.asc/.minisig`）、`checksum`（`SHA256SUMS`、`*.sha256/.md5/.sha1`、`checksums.txt`、`.digests`）、`sbom`（`.spdx.json/.cdx.json/.sbom.json`）、`provenance`（`.intoto.jsonl/.att.json/provenance.json`）、`symbols`（`.pdb/.dSYM.zip/.dbg/.sym/-dbgsym/.debuginfo/.ddeb`）、`updater`（`latest*.yml|json`、`.blockmap/.delta`、`.appinstaller`、`appcast.xml`）、`win-patch`（`.msu/.msp/.msm/.cab`）、`win-store-upload`（`.msixupload/.appxupload`）；
+  - 主类型：`android`（apk/aab/xapk/apks/obb）、`ios`（ipa）、`win-store`（msix/msixbundle/appx/appxbundle/xap）、`win-installer`（msi 或 setup/installer/install 命名的 exe，分隔符后允许版本点号）、`win-exe`（其它 exe）、`mac-installer`（dmg/pkg/mpkg）、`linux-pkg`（AppImage/deb/rpm/snap/flatpak/pkg.tar.*/run）、`pkg-eco`（whl/jar/war/ear/nupkg/gem/phar/vsix/crx/xpi）、`firmware`（uf2/hex/elf/img/dtb/uboot）、`vm-image`（ova/ovf/vhd/vhdx/vmdk/vdi/qcow2）、`iso-image`（iso）、`script`（install|setup|bootstrap 的 sh/ps1/bat）、`docs`（pdf/epub/chm/mobi）、`archive`（zip/tar.*/tbz2/txz/tzst/tlz4/tzo/7z/rar）。
+  - **色调**：每条规则带 `tone`（win/mac/linux/android/ios/portable/meta/neutral），`generateCSSVariables` 为每套主题生成明暗自适应的 `--ghb-*` 变量；徽章与悬浮层共用同一套色。压缩包识别到系统时图标换 `📦`、文案「免安装」（portable 色），否则 `🗜️`/「压缩包」。
 - **架构** `describeArch(name)`：`x86_64` → Intel/AMD 64 位、`aarch64|arm64` → ARM 64、`universal2` → 通用、`i686|i386` → 32 位；无匹配返回空。
 - **行内徽章**：`decorateAssetRow` 在下载链接 `a[href*="/releases/download/"]` 之后插入 `.ghb-asset-chip`（类型图标 + 短文案）；元数据类只显示图标；本机系统匹配时文案前加 `⭐`（如 `⭐ 🗜️ 免安装`），悬浮面板内显示「适合你的 <系统> 系统」。用户文案用动词短语内联回答「我该怎么用」，悬浮补「是什么 / 给谁 / 怎么装 / 替代选择」。
-- **推荐** `pickRecommended(items, userPlatform)`：仅 `RECOMMENDABLE_KINDS`（安装器 / 包 / 压缩包）参与，按 kind 分组，同组有 64 位 / 通用包则只标它们；`detectUserPlatform()` 由 UA 判定（iPadOS 按触点数判 ios）。
+- **推荐** `pickRecommended(items, userPlatform)`：仅 `RECOMMENDABLE_KINDS`（安装器 / 商店包 / 包 / 压缩包，**不含商店上传包与元数据**）参与，按 kind 分组，同组有 64 位 / 通用包则只标它们；`detectUserPlatform()` 由 UA 判定（iPadOS 按触点数判 ios）。
 - **悬浮浮层**：`ensureAssetTip` 挂 `body`（`position:fixed`，避免 `.Box` overflow 裁切）；`mouseover` 220ms 延迟打开、`mouseout` 120ms 延迟关闭、`focusin` 立即打开、点击切换、`Escape` / `scroll` / `resize` 关闭；浮层 `pointer-events:none`。
 - **幂等**：`decorateAssetRow` 更新前比对文本 / 类 / aria，避免 MutationObserver 自循环；`removeAssetHints()` 移除徽章与浮层、还原行文本。
 - **样式**：`injectAssetHintStyles()` 注入 `#github-asset-hint-style`，沿用 `--ghb-*` 主题变量，切主题自动变色。
